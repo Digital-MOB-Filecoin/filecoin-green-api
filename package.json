@@ -1,0 +1,28 @@
+{
+  "name": "filecoin-green-api",
+  "version": "0.0.1",
+  "description": "Filecoin Green API",
+  "main": "index.js",
+  "scripts": {
+    "start": "env-cmd node index.js",
+    "api": "env-cmd node api.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Digital-MOB-Filecoin/filecoin-green-api.git"
+  },
+  "keywords": [
+    "filecoin"
+  ],
+  "author": "George Robert Stefan, Aura Andreea Stefan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Digital-MOB-Filecoin/filecoin-green-api/issues"
+  },
+  "homepage": "https://github.com/Digital-MOB-Filecoin/filecoin-green-api#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "pg": "^8.6.0",
+    "time-stamp": "^2.2.0"
+  }
+}
