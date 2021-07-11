@@ -1,6 +1,6 @@
 {
   "name": "filecoin-green-api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Filecoin Green API",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,8 @@
   "homepage": "https://github.com/Digital-MOB-Filecoin/filecoin-green-api#readme",
   "dependencies": {
     "axios": "^0.21.1",
+    "bn.js": "^5.2.0",
+    "borc": "^3.0.0",
     "pg": "^8.6.0",
     "time-stamp": "^2.2.0"
   }

@@ -44,7 +44,7 @@ const save_block = async function (block) {
     const client = await pool.connect();
     try {
         await client.query(`\
-           INSERT INTO FilGeenProcessedBlocks (Block) \
+           INSERT INTO fg_processed_blocks (Block) \
            VALUES ('${block}') `);
 
 
@@ -58,7 +58,7 @@ const save_bad_block = async function (block) {
     const client = await pool.connect();
     try {
         await client.query(`\
-           INSERT INTO FilGeenBadBlocks (Block) \
+           INSERT INTO fg_badblocks (Block) \
            VALUES ('${block}') `);
 
 
@@ -74,7 +74,7 @@ const get_start_block = async function () {
     try {
         const result = await client.query(`\
         SELECT MAX(Block) \
-        FROM FilGeenProcessedBlocks `);
+        FROM fg_processed_blocks `);
 
         if (result?.rows[0]?.max) {
             block = result?.rows[0]?.max;
@@ -92,7 +92,7 @@ const get_bad_blocks = async function (limit, offset) {
     let rows = undefined;
     try {
         const result = await client.query(`\
-        SELECT block FROM FilGeenBadBlocks ORDER BY block LIMIT ${limit} OFFSET ${offset}`);
+        SELECT block FROM fg_badblocks ORDER BY block LIMIT ${limit} OFFSET ${offset}`);
 
         if (result?.rows) {
             rows = result?.rows;
@@ -111,7 +111,7 @@ const have_block = async function (block) {
 
     try {
         const result = await client.query(`\
-        SELECT EXISTS(SELECT 1 FROM FilGeenProcessedBlocks WHERE Block = ${block})`);
+        SELECT EXISTS(SELECT 1 FROM fg_processed_blocks WHERE Block = ${block})`);
 
         if (result?.rows[0]?.exists) {
             found = true;
@@ -125,11 +125,26 @@ const have_block = async function (block) {
     return found;
 }
 
+const save_sector = async function (sector_info) {
+    const client = await pool.connect();
+    try {
+        await client.query(`\
+           INSERT INTO fg_sectors (sector, miner, type, size, start_epoch, end_epoch) \
+           VALUES ('${sector_info.sector}', '${sector_info.miner}','${sector_info.type}','${sector_info.size}','${sector_info.start_epoch}','${sector_info.end_epoch}') `);
+
+
+    } catch (err) {
+        WARNING(`[SaveSector] ${err}`)
+    }
+    client.release()
+}
+
 module.exports = {
     save_block,
     save_bad_block,
     get_start_block,
     get_bad_blocks,
-    have_block
+    have_block,
+    save_sector
   }
 

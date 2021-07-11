@@ -1,65 +1,67 @@
 const { Pool } = require("pg");
 const config = require('./config');
-const pool = new Pool(config.database);
 
-/*const create_filmessages_table = async function () {
-    const client = await pool.connect();
+class Migrations {
 
-    //await client.query('DROP TABLE filmessages');
+    constructor(api, token) {
+        this.pool = new Pool(config.database);
+    }
 
-    await client.query("\
-        CREATE TABLE IF NOT EXISTS FilMessages\
+    async create_fg_sectors_table() {
+        const client = await this.pool.connect();
+
+        //await client.query('DROP TABLE sectors');
+
+        await client.query("\
+        CREATE TABLE IF NOT EXISTS fg_sectors\
         (\
-            CID text NOT NULL,\
-            Block bigint NOT NULL,\
-            \"from\" text NOT NULL,\
-            \"to\" text NOT NULL,\
-            Nonce bigint NOT NULL,\
-            Value text NOT NULL,\
-            GasLimit bigint NOT NULL,\
-            GasFeeCap text NOT NULL,\
-            GasPremium text NOT NULL,\
-            Method integer NOT NULL,\
-            Params text NOT NULL,\
-            ExitCode integer,\
-            Return text,\
-            GasUsed bigint,\
-            Version integer NOT NULL\
+            sector bigint NOT NULL,\
+            miner text NOT NULL,\
+            type text NOT NULL,\
+            size bigint NOT NULL,\
+            start_epoch bigint NOT NULL,\
+            end_epoch bigint NOT NULL\
         )");
 
-    client.release()
-}*/
+        client.release()
+    }
 
-const create_filgeenprocessedblocks_table = async function () {
-    const client = await pool.connect();
+    async create_fg_processed_blocks_table() {
+        const client = await this.pool.connect();
 
-    await client.query("\
-        CREATE TABLE IF NOT EXISTS FilGeenProcessedBlocks\
+        await client.query("\
+        CREATE TABLE IF NOT EXISTS fg_processed_blocks\
         (\
             Block bigint NOT NULL UNIQUE,\
             Created timestamp default now(),\
             PRIMARY KEY (Block) \
         )");
 
-    client.release()
-}
+        client.release()
+    }
 
-const create_filgeenbadblocks_table = async function () {
-    const client = await pool.connect();
+    async create_fg_badblocks_table() {
+        const client = await this.pool.connect();
 
-    await client.query("\
-        CREATE TABLE IF NOT EXISTS FilGeenBadBlocks\
+        await client.query("\
+        CREATE TABLE IF NOT EXISTS fg_badblocks\
         (\
             Block bigint NOT NULL,\
             Created timestamp default now(),\
             PRIMARY KEY (Block) \
         )");
 
-    client.release()
+        client.release()
+    }
+
+    async run() {
+        await this.create_fg_processed_blocks_table();
+        await this.create_fg_badblocks_table();
+        await this.create_fg_sectors_table();
+    }
 }
 
 module.exports = {
-    create_filgeenprocessedblocks_table,
-    create_filgeenbadblocks_table
+    Migrations
   }
 
