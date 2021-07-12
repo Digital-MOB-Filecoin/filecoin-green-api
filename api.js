@@ -46,7 +46,7 @@ app.get("/network", async function (req, res, next) {
 
     try {
         const client = await pool.connect()
-        var result = await client.query(`SELECT * FROM fil_network`);
+        var result = await client.query(`SELECT * FROM fil_network ORDER BY epoch`);
         client.release();
 
         res.json(result.rows);
