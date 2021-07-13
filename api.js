@@ -46,8 +46,8 @@ app.get("/network", async function (req, res, next) {
 
     try {
         const client = await pool.connect()
-        //select one data point every 1 hour
-        var result = await client.query(`SELECT * FROM fil_network WHERE epoch % 120 = 0 ORDER BY epoch`);
+        //select one data point every 12 hours
+        var result = await client.query(`SELECT * FROM fil_network WHERE epoch % 1440 = 0 ORDER BY epoch`);
         client.release();
 
         res.json(result.rows);
