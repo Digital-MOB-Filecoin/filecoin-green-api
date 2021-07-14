@@ -1,6 +1,8 @@
 module.exports = {
     filgreen: {
-      api_port: process.env.API_PORT || 3000
+      api_port: process.env.API_PORT || 3000,
+      epochs_gap: process.env.EPOCHS_GAP || 1440, //12 hours
+      limit: process.env.LIMIT || 1000,
     },
     database: {
         user: process.env.DB_USER || '',
