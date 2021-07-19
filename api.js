@@ -12,53 +12,6 @@ app.use(express.json());
 
 const pool = new Pool(config.database);
 
-app.get("/get_head", async function (req, res, next) {
-    let code = 200;
-    let msg = 'successful';
-
-    try {
-        const client = await pool.connect()
-        var result = await client.query('SELECT MAX(Block) FROM fil_blocks ');
-        client.release();
-
-        res.json(result.rows);
-
-    } catch (e) {
-        code = 401;
-        msg = 'Failed to get head';
-        INFO(`FilGreen API get_head error: ${e}`);
-        res.status(code).send(msg);
-    }
-});
-
-app.get("/get_block", async function (req, res, next) {
-    let code = 200;
-    let msg = 'successful';
-
-    //TODO : check if we have the block
-    //SELECT using LIMIT 
-
-    if (req.query?.block) {
-        const block = req.query?.block;
-
-        try {
-            const client = await pool.connect()
-            var result = await client.query(`SELECT * FROM fil_messages WHERE block=${block}`);
-            client.release();
-
-            res.json(result.rows);
-            INFO(`FilGreen API get_block[${block}] ${result.rows.length} messages`);
-
-        } catch (e) {
-            code = 401;
-            msg = 'Failed to get block';
-            INFO(`FilGreen API get_block[${block}] error: ${e}`);
-            res.status(code).send(msg);
-        }
-
-    }
-});
-
 function error_response(code, msg, res) {
     res.status(code).send(msg);
 }
@@ -103,13 +56,11 @@ async function handle_network_request(fields, query) {
     INFO(`[HandleNetworkRequest] select ${fields}, filter:${filter}, interval[${start},${end}] , interval in epochs[${get_epoch(start)},${get_epoch(end)}]`);
 
     try {
-        const client = await pool.connect();
-
         if (all == 'true') {
             limit = config.filgreen.limit;
-            result = await client.query(`SELECT epoch,${fields},timestamp FROM fil_network_view_epochs WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+            result = await pool.query(`SELECT epoch,${fields},timestamp FROM fil_network_view_epochs WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
         } else {
-            result = await client.query(`
+            result = await pool.query(`
             SELECT
             ${fields},
             timestamp AS date
@@ -128,9 +79,6 @@ async function handle_network_request(fields, query) {
          ) q;`);
 
         }
-        
-        client.release();
-
     } catch (e) {
         ERROR(`handle_network_request query:[${JSON.stringify(query)}], fields:${fields}, error:${e}`);
     }
@@ -169,13 +117,11 @@ async function handle_miner_request(fields, query) {
     INFO(`[HandleMinerRequest] select ${fields}, filter:${filter}, interval[${start},${end}] , interval in epochs[${get_epoch(start)},${get_epoch(end)}]`);
 
     try {
-        const client = await pool.connect();
-
         if (all == 'true') {
             limit = config.filgreen.limit;
-            result = await client.query(`SELECT epoch,miner,${fields},timestamp FROM fil_miner_view_epochs WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+            result = await pool.query(`SELECT epoch,miner,${fields},timestamp FROM fil_miner_view_epochs WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
         } else {
-            result = await client.query(`
+            result = await pool.query(`
             SELECT
             miner,
             ${fields},
@@ -196,9 +142,6 @@ async function handle_miner_request(fields, query) {
          ) q;`);
 
         }
-        
-        client.release();
-
     } catch (e) {
         ERROR(`[HandleMinerRequest] query:[${JSON.stringify(query)}], fields:${fields}, error:${e}`);
     }
