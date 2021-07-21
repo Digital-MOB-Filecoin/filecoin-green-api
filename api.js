@@ -76,11 +76,11 @@ function add_timeinterval(query, rows) {
     } else if (query?.filter == 'week') {
         let start_item = {...rows[0]};
 
-        INFO(`[TimeInterval] week startItemInitial: ${start_item}`);
+        INFO(`[TimeInterval] week startItemInitial: ${JSON.stringify(start_item)}`);
         start_item.start_date = new Date(start);
         start_item.end_date = endOfTheDay(endOfTheWeek(rows[0].start_date));
 
-        INFO(`[TimeInterval] week startItem: ${start_item}`);
+        INFO(`[TimeInterval] week startItem: ${JSON.stringify(start_item)}`);
 
         result.push(start_item);
 
@@ -93,20 +93,20 @@ function add_timeinterval(query, rows) {
 
         let end_item = {...rows[rows.length-1]};
 
-        INFO(`[TimeInterval] week endItemInitial: ${end_item}`);
+        INFO(`[TimeInterval] week endItemInitial: ${JSON.stringify(end_item)}`);
         end_item.start_date = rows[rows.length-1].start_date;
         end_item.end_date = endOfTheDay(new Date(end));
 
-        INFO(`[TimeInterval] week endItemInitial: ${end_item}`);
+        INFO(`[TimeInterval] week endItemInitial: ${JSON.stringify(end_item)}`);
 
         result.push(end_item);
     } else if (query?.filter == 'month') {
         let start_item = {...rows[0]};
-        INFO(`[TimeInterval] month startItemInitial: ${start_item}`);
+        INFO(`[TimeInterval] month startItemInitial: ${JSON.stringify(start_item)}`);
         start_item.start_date = new Date(start);
         start_item.end_date = endOfTheDay(endOfTheMounth(rows[0].start_date));
 
-        INFO(`[TimeInterval] month startItem: ${start_item}`);
+        INFO(`[TimeInterval] month startItem: ${JSON.stringify(start_item)}`);
 
         result.push(start_item);
 
@@ -118,12 +118,12 @@ function add_timeinterval(query, rows) {
         }
 
         let end_item = {...rows[rows.length-1]};
-        INFO(`[TimeInterval] month endItemInitial: ${end_item}`);
+        INFO(`[TimeInterval] month endItemInitial: ${JSON.stringify(end_item)}`);
 
         end_item.start_date = rows[rows.length-1].start_date;
         end_item.end_date = endOfTheDay(new Date(end));
 
-        INFO(`[TimeInterval] month endItem: ${end_item}`);
+        INFO(`[TimeInterval] month endItem: ${JSON.stringify(end_item)}`);
 
         result.push(end_item);
     } else {
