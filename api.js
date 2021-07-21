@@ -234,7 +234,6 @@ async function handle_miner_request(fields, query) {
         } else {
             result = await pool.query(`
             SELECT
-            miner,
             ${fields},
             timestamp AS start_date
             FROM (
