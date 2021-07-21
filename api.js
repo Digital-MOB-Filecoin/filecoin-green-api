@@ -24,7 +24,118 @@ function get_date_now() {
 
 function get_epoch(date) {
     return ((Date.parse(date) / 1000 - 1598281200) / 30);
+}
+
+function endOfTheDay(date) {
+    var result = new Date(date);
+    result.setTime(result.getTime() + ((24*60*60*1000) - 1));
+    return result;
   }
+
+function endOfTheWeek(date) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + 6);
+    return result;
+}
+
+function endOfTheMounth(date) {
+    var result = new Date(date.setMonth(date.getMonth()+1));
+    result.setDate(result.getTime() - 1);
+    return result;
+}
+
+function add_timeinterval(query, rows) {
+    let result = [];
+    let start = query?.start;
+    let end = query?.end;
+    let all = query?.all;
+
+    if (!rows?.length) {
+        return result;
+    }
+
+    if (all == 'true') {
+        return rows;
+    }
+
+    if (!start) {
+        start = '2020-08-25';
+    }
+
+    if (!end) {
+        end = get_date_now();
+    }
+
+    INFO(`[TimeInterval] datapoints: ${rows.length}, start: ${start}, end: ${end}`);
+
+    if (rows.length == 1) {
+        let item = {...rows[0]};
+        item.start_date = new Date(start);
+        item.end_date = endOfTheDay(new Date(end));
+        result.push(item);
+    } else if (query?.filter == 'week') {
+        let start_item = {...rows[0]};
+
+        INFO(`[TimeInterval] week startItemInitial: ${start_item}`);
+        start_item.start_date = new Date(start);
+        start_item.end_date = endOfTheDay(endOfTheWeek(rows[0].start_date));
+
+        INFO(`[TimeInterval] week startItem: ${start_item}`);
+
+        result.push(start_item);
+
+        for (let i = 1; i < rows.length - 1; i++) {
+            let item = {...rows[i]};
+            item.end_date = endOfTheDay(endOfTheWeek(rows[i].start_date));
+
+            result.push(item);
+        }
+
+        let end_item = {...rows[rows.length-1]};
+
+        INFO(`[TimeInterval] week endItemInitial: ${end_item}`);
+        end_item.start_date = rows[rows.length-1].start_date;
+        end_item.end_date = endOfTheDay(new Date(end));
+
+        INFO(`[TimeInterval] week endItemInitial: ${end_item}`);
+
+        result.push(end_item);
+    } else if (query?.filter == 'month') {
+        let start_item = {...rows[0]};
+        INFO(`[TimeInterval] month startItemInitial: ${start_item}`);
+        start_item.start_date = new Date(start);
+        start_item.end_date = endOfTheDay(endOfTheMounth(rows[0].start_date));
+
+        INFO(`[TimeInterval] month startItem: ${start_item}`);
+
+        result.push(start_item);
+
+        for (let i = 1; i < rows.length - 1; i++) {
+            let item = {...rows[i]};
+            item.end_date = endOfTheDay(endOfTheMounth(rows[i].start_date));
+
+            result.push(item);
+        }
+
+        let end_item = {...rows[rows.length-1]};
+        INFO(`[TimeInterval] month endItemInitial: ${end_item}`);
+
+        end_item.start_date = rows[rows.length-1].start_date;
+        end_item.end_date = endOfTheDay(new Date(end));
+
+        INFO(`[TimeInterval] month endItem: ${end_item}`);
+
+        result.push(end_item);
+    } else {
+        rows.forEach(item => {
+            let updated_item = {...item}
+            updated_item.end_date = endOfTheDay(item.start_date);
+            result.push(updated_item);
+        });
+    }
+
+    return result;
+}
 
 async function handle_network_request(fields, query) {
     var result;
@@ -63,7 +174,7 @@ async function handle_network_request(fields, query) {
             result = await pool.query(`
             SELECT
             ${fields},
-            timestamp AS date
+            timestamp AS start_date
             FROM (
                 SELECT 
                     ROUND(AVG(commited))                AS commited,
@@ -83,7 +194,7 @@ async function handle_network_request(fields, query) {
         ERROR(`handle_network_request query:[${JSON.stringify(query)}], fields:${fields}, error:${e}`);
     }
 
-    return result;
+    return add_timeinterval(query, result.rows);
 }
 
 async function handle_miner_request(fields, query) {
@@ -96,7 +207,7 @@ async function handle_miner_request(fields, query) {
     let start = query?.start;
     let end = query?.end;
     let all = query?.all;
-    let offset = query?.offset
+    let offset = query?.offset;
 
     if ((query?.filter == 'week') || (query?.filter == 'month')) {
         filter = query.filter;
@@ -125,7 +236,7 @@ async function handle_miner_request(fields, query) {
             SELECT
             miner,
             ${fields},
-            timestamp AS date
+            timestamp AS start_date
             FROM (
                 SELECT 
                     miner                               AS miner,
@@ -146,7 +257,7 @@ async function handle_miner_request(fields, query) {
         ERROR(`[HandleMinerRequest] query:[${JSON.stringify(query)}], fields:${fields}, error:${e}`);
     }
 
-    return result;
+    return add_timeinterval(query, result.rows);
 }
 
 app.get("/network/capacity", async function (req, res, next) {
@@ -154,9 +265,9 @@ app.get("/network/capacity", async function (req, res, next) {
 
     try {
         var result = await handle_network_request('commited,used', req.query);
-        if (result.rows) {
-            INFO(`GET[/network/capacity] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/network/capacity] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/network/capacity] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get network capacity data', res);
@@ -178,9 +289,9 @@ app.get("/network/fraction", async function (req, res, next) {
             fields = 'fraction_per_epoch as fraction';
         }
         var result = await handle_network_request(fields, req.query);
-        if (result.rows) {
-            INFO(`GET[/network/fraction] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/network/fraction] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/network/fraction] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get network fraction data', res);
@@ -202,9 +313,9 @@ app.get("/network/sealed", async function (req, res, next) {
             fields = 'total_per_epoch as sealed';
         }
         var result = await handle_network_request(fields, req.query);
-        if (result.rows) {
-            INFO(`GET[/network/sealed] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/network/sealed] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/network/sealed] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get network sealed data', res);
@@ -227,9 +338,9 @@ app.get("/miner/capacity", async function (req, res, next) {
 
     try {
         var result = await handle_miner_request('commited,used', req.query);
-        if (result.rows) {
-            INFO(`GET[/miner/capacity] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/miner/capacity] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/miner/capacity] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get miner capacity data', res);
@@ -255,9 +366,9 @@ app.get("/miner/fraction", async function (req, res, next) {
             fields = 'fraction_per_epoch as fraction';
         }
         var result = await handle_miner_request(fields, req.query);
-        if (result.rows) {
-            INFO(`GET[/miner/fraction] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/miner/fraction] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/miner/fraction] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get miner fraction data', res);
@@ -284,9 +395,9 @@ app.get("/miner/sealed", async function (req, res, next) {
         }
 
         var result = await handle_miner_request(fields, req.query);
-        if (result.rows) {
-            INFO(`GET[/miner/sealed] query:${JSON.stringify(req.query)} done, data points: ${result.rows?.length}`);
-            res.json(result.rows);
+        if (result) {
+            INFO(`GET[/miner/sealed] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
+            res.json(result);
         } else {
             ERROR(`GET[/miner/sealed] query:${JSON.stringify(req.query)}, empty response`);
             error_response(401, 'Failed to get miner sealed data', res);
