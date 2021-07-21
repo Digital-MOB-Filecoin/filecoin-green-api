@@ -2,6 +2,7 @@ const config = require('./config');
 const { Pool } = require("pg");
 const { version } = require('./package.json');
 const { INFO, ERROR, WARNING } = require('./logs');
+const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
 
 var express = require("express");
 var cors = require('cors');
@@ -27,21 +28,15 @@ function get_epoch(date) {
 }
 
 function endOfTheDay(date) {
-    var result = new Date(date);
-    result.setTime(result.getTime() + ((24*60*60*1000) - 1));
-    return result;
-  }
-
-function endOfTheWeek(date) {
-    var result = new Date(date);
-    result.setDate(result.getDate() + 6);
-    return result;
+    return endOfDay(new Date(date));
 }
 
-function endOfTheMounth(date) {
-    var result = new Date(date.setMonth(date.getMonth()+1));
-    result.setDate(result.getTime() - 1);
-    return result;
+function endOfTheWeek(date) {
+    return endOfWeek(new Date(date), {weekStartsOn: 1});
+}
+
+function endOfTheMonth(date) {
+    return endOfMonth(new Date(date));
 }
 
 function add_timeinterval(query, rows) {
@@ -104,7 +99,7 @@ function add_timeinterval(query, rows) {
         let start_item = {...rows[0]};
         INFO(`[TimeInterval] month startItemInitial: ${JSON.stringify(start_item)}`);
         start_item.start_date = new Date(start);
-        start_item.end_date = endOfTheDay(endOfTheMounth(rows[0].start_date));
+        start_item.end_date = endOfTheDay(endOfTheMonth(rows[0].start_date));
 
         INFO(`[TimeInterval] month startItem: ${JSON.stringify(start_item)}`);
 
@@ -112,7 +107,7 @@ function add_timeinterval(query, rows) {
 
         for (let i = 1; i < rows.length - 1; i++) {
             let item = {...rows[i]};
-            item.end_date = endOfTheDay(endOfTheMounth(rows[i].start_date));
+            item.end_date = endOfTheDay(endOfTheMonth(rows[i].start_date));
 
             result.push(item);
         }
