@@ -175,7 +175,7 @@ async function handle_network_request(fields, query) {
                     ROUND(AVG(commited))                AS commited,
                     ROUND(AVG(used))                    AS used,
                     ROUND(AVG(total))                   AS total,
-                    ROUND(AVG(avg_total_per_epoch))     AS total_per_epoch,
+                    ROUND(AVG(total_per_day))           AS total_per_day,
                     (AVG(used) / AVG(total))            AS fraction,
                     date_trunc('${filter}', date::date) AS timestamp
                 FROM fil_network_view_days
@@ -237,7 +237,7 @@ async function handle_miner_request(fields, query) {
                     ROUND(AVG(commited))                AS commited,
                     ROUND(AVG(used))                    AS used,
                     ROUND(AVG(total))                   AS total,
-                    ROUND(AVG(avg_total_per_epoch))     AS total_per_epoch,
+                    ROUND(AVG(total_per_day))           AS total_per_day,
                     (AVG(used) / AVG(total))            AS fraction,
                     date_trunc('${filter}', date::date) AS timestamp
                 FROM fil_miner_view_days
@@ -302,7 +302,7 @@ app.get("/network/sealed", async function (req, res, next) {
     INFO(`GET[/network/sealed] query:${JSON.stringify(req.query)}`);
 
     try {
-        let fields = '(total_per_epoch * 2880) as sealed';
+        let fields = 'total_per_day as sealed';
         if (req.query?.all == 'true') {
             fields = 'total_per_epoch as sealed';
         }
@@ -383,7 +383,7 @@ app.get("/miner/sealed", async function (req, res, next) {
     }
 
     try {
-        let fields = '(total_per_epoch * 2880) as sealed';
+        let fields = 'total_per_day as sealed';
         if (req.query?.all == 'true') {
             fields = 'total_per_epoch as sealed';
         }
