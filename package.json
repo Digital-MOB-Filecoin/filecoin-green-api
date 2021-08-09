@@ -1,6 +1,6 @@
 {
   "name": "filecoin-green-api",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Filecoin Green API",
   "scripts": {
     "api": "env-cmd node api.js"

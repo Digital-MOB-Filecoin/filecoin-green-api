@@ -3,6 +3,7 @@ const { Pool } = require("pg");
 const { version } = require('./package.json');
 const { INFO, ERROR, WARNING } = require('./logs');
 const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
+const { filchain } = require('./filchain-api');
 
 var express = require("express");
 var cors = require('cors');
@@ -402,6 +403,8 @@ app.get("/miner/sealed", async function (req, res, next) {
         error_response(402, 'Failed to get miner sealed data', res);
     }
 });
+
+app.get("/filchain", filchain);
 
 app.listen(config.filgreen.api_port, () => {
     INFO("FilGreen API running on port: " + config.filgreen.api_port);
