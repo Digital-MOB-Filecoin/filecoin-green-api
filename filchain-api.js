@@ -19,13 +19,8 @@ function add_params(have_params) {
 
 // GET
 const head = async function (req, res, next) {
-    let code = 200;
-    let msg = 'successful';
-
     try {
-        const client = await pool.connect()
-        var result = await client.query('SELECT MAX(Block) as head FROM fil_blocks ');
-        client.release();
+        var result = await pool.query('SELECT MAX(Block) as head FROM fil_blocks ');
 
         if (result.rows.length == 1) {
             INFO(`GET[/filchain/head]: ${JSON.stringify(result.rows)}`);
@@ -38,6 +33,38 @@ const head = async function (req, res, next) {
     } catch (e) {
         ERROR(`GET[/filchain/head] error: ${e}`);
         error_response(401, 'Failed to get filchain head', res);
+    }
+};
+
+// GET
+const block = async function (req, res, next) {
+    let block = req.query?.block;
+
+    if (!block) {
+        ERROR(`GET[/filchain/block] Failed to get filchain block, no block param provided`);
+        error_response(402, 'Failed to get filchain block, no block param provided', res);
+        return;
+    }
+
+    try {
+        var result = await pool.query(`SELECT * FROM fil_messages WHERE \"Block\" = '${block}'`);
+        res.json(result.rows);
+
+    } catch (e) {
+        ERROR(`GET[/filchain/block] error: ${e}`);
+        error_response(401, 'Failed to get filchain block', res);
+    }
+};
+
+// GET
+const miners = async function (req, res, next) {
+    try {
+        var result = await pool.query(`SELECT * FROM fil_miners`);
+        res.json(result.rows);
+
+    } catch (e) {
+        ERROR(`GET[/filchain/miners] error: ${e}`);
+        error_response(401, 'Failed to get miners', res);
     }
 };
 
@@ -130,5 +157,7 @@ const filchain = async function (req, res, next) {
 
 module.exports = {
     head,
+    block,
+    miners,
     filchain,
 }

@@ -3,7 +3,7 @@ const { Pool } = require("pg");
 const { version } = require('./package.json');
 const { INFO, ERROR, WARNING } = require('./logs');
 const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
-const { head, filchain } = require('./filchain-api');
+const { head, block, miners, filchain } = require('./filchain-api');
 
 var express = require("express");
 var cors = require('cors');
@@ -404,8 +404,10 @@ app.get("/miner/sealed", async function (req, res, next) {
     }
 });
 
-app.get("/filchain", filchain);
 app.get("/filchain/head", head);
+app.get("/filchain/block", block);
+app.get("/filchain/miners", miners);
+app.get("/filchain", filchain);
 
 app.listen(config.filgreen.api_port, () => {
     INFO("FilGreen API running on port: " + config.filgreen.api_port);
