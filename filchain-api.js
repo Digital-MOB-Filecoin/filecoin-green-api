@@ -39,6 +39,14 @@ const filchain = async function (req, res, next) {
         offset = 0;
     }
 
+    if (limit < 1 || limit > 500) {
+        limit = 500;
+    }
+
+    if (offset < 0) {
+        offset = 0;
+    }
+
     if (cid) {
         query += `(\"CID\" = '${cid}') `;
         have_params = true;
