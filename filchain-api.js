@@ -18,6 +18,30 @@ function add_params(have_params) {
 }
 
 // GET
+const head = async function (req, res, next) {
+    let code = 200;
+    let msg = 'successful';
+
+    try {
+        const client = await pool.connect()
+        var result = await client.query('SELECT MAX(Block) as head FROM fil_blocks ');
+        client.release();
+
+        if (result.rows.length == 1) {
+            INFO(`GET[/filchain/head]: ${JSON.stringify(result.rows)}`);
+            res.json(result.rows[0]);
+        } else {
+            ERROR(`GET[/filchain/head]: Failed to get filchain head, result: ${JSON.stringify(result.rows)}`);
+            error_response(402, 'Failed to get filchain head', res);
+        }
+
+    } catch (e) {
+        ERROR(`GET[/filchain/head] error: ${e}`);
+        error_response(401, 'Failed to get filchain head', res);
+    }
+};
+
+// GET
 const filchain = async function (req, res, next) {
     let query = 'SELECT * FROM fil_messages WHERE ';
     let have_params = false;
@@ -105,5 +129,6 @@ const filchain = async function (req, res, next) {
 }
 
 module.exports = {
+    head,
     filchain,
 }
