@@ -127,7 +127,7 @@ const filchain = async function (req, res, next) {
         have_params = true;
     }
 
-    query += `ORDER BY \"Block\" LIMIT ${limit} OFFSET ${offset};`;
+    query += `LIMIT ${limit} OFFSET ${offset};`;
 
     INFO(`GET[/filchain] query: [ ${query} ] run`);
 
