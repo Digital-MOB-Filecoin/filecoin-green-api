@@ -259,7 +259,7 @@ app.get("/network/capacity", async function (req, res, next) {
     INFO(`GET[/network/capacity] query:${JSON.stringify(req.query)}`);
 
     try {
-        var result = await handle_network_request('commited,used', req.query);
+        var result = await handle_network_request('commited,used,total', req.query);
         if (result) {
             INFO(`GET[/network/capacity] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
             res.json(result);
@@ -332,7 +332,7 @@ app.get("/miner/capacity", async function (req, res, next) {
     }
 
     try {
-        var result = await handle_miner_request('commited,used', req.query);
+        var result = await handle_miner_request('commited,used,total', req.query);
         if (result) {
             INFO(`GET[/miner/capacity] query:${JSON.stringify(req.query)} done, data points: ${result?.length}`);
             res.json(result);
