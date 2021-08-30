@@ -255,6 +255,41 @@ async function handle_miner_request(fields, query) {
     return add_timeinterval(query, result.rows);
 }
 
+async function handle_miners_list(query) {
+    var result = {
+        pagination: {
+
+        },
+        miners: []
+    };
+    let code = 200;
+    let limit = query?.limit;
+    let offset = query?.offset;
+
+    if (!limit) {
+        limit = 10;
+    }
+
+    if (!offset) {
+        offset = 0;
+    }
+
+    INFO(`[HandleMinersList] limit:${limit}, offset:${offset}`);
+
+    try {
+        let count_result = await pool.query(`SELECT COUNT(miner) FROM fil_miners_view;`);
+        let miners_result = await pool.query(`SELECT * FROM fil_miners_view LIMIT ${limit} OFFSET ${offset}`);
+        result.pagination.total = count_result.rows[0]?.count;
+        result.pagination.limit = limit;
+        result.pagination.offset = offset;
+        result.miners = miners_result.rows;
+    } catch (e) {
+        ERROR(`[HandleMinersList] query:[${JSON.stringify(query)}], error:${e}`);
+    }
+
+    return result;
+}
+
 app.get("/network/capacity", async function (req, res, next) {
     INFO(`GET[/network/capacity] query:${JSON.stringify(req.query)}`);
 
@@ -401,6 +436,25 @@ app.get("/miner/sealed", async function (req, res, next) {
     } catch (e) {
         ERROR(`GET[/miner/sealed] query:${JSON.stringify(req.query)}, error:${e}`);
         error_response(402, 'Failed to get miner sealed data', res);
+    }
+});
+
+app.get("/miners", async function (req, res, next) {
+    INFO(`GET[/miners] query:${JSON.stringify(req.query)}`);
+
+    try {
+        var result = await handle_miners_list(req.query);
+        if (result) {
+            INFO(`GET[/miners] query:${JSON.stringify(req.query)} done`);
+            res.json(result);
+        } else {
+            ERROR(`GET[/miners] query:${JSON.stringify(req.query)}, empty response`);
+            error_response(401, 'Failed to get miners data', res);
+        }
+
+    } catch (e) {
+        ERROR(`GET[/miners] query:${JSON.stringify(req.query)}, error:${e}`);
+        error_response(402, 'Failed to get miners data', res);
     }
 });
 
