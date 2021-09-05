@@ -70,7 +70,7 @@ const miners = async function (req, res, next) {
 
 // GET
 const filchain = async function (req, res, next) {
-    let query = 'SELECT * FROM fil_messages WHERE ';
+    let query = 'SELECT \"CID\", \"Block\", \"From\", \"To\", \"Nonce\", \"Value\", \"GasLimit\", \"GasFeeCap\", \"GasPremium\", \"Method\", \"Params\", \"ExitCode\", \"Return\", \"GasUsed\", \"Version\" FROM fil_messages WHERE ';
     let have_params = false;
     let limit = req.query?.limit;
     let offset = req.query?.offset;
