@@ -4,7 +4,7 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
-class SealedModel {
+class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Committed capacity added per day';
@@ -40,7 +40,7 @@ class SealedModel {
                         ORDER BY timestamp
                 ) q;`);
         } catch (e) {
-            ERROR(`[SealedModel] NetworkQuery error:${e}`);
+            ERROR(`[StorageEnergyModel] NetworkQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
@@ -64,7 +64,7 @@ class SealedModel {
                     ORDER BY timestamp
              ) q;`);
         } catch (e) {
-            ERROR(`[SealedModel] MinerQuery error:${e}`);
+            ERROR(`[StorageEnergyModel] MinerQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
@@ -139,7 +139,7 @@ class SealedModel {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[SealedModel] Export error:${e}`);
+            ERROR(`[StorageEnergyModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -154,5 +154,5 @@ class SealedModel {
 }
 
 module.exports = {
-    SealedModel
+    StorageEnergyModel
 };
