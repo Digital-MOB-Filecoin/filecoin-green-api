@@ -7,10 +7,10 @@ const { add_time_interval, get_epoch } = require('./utils')
 class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Committed capacity added per day';
-        this.category = CATEGORY.CAPACITY;
+        this.name = 'Energy used to store files';
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
-        this.y = DATA_TYPE.GiB;
+        this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
     }
 
@@ -31,7 +31,7 @@ class StorageEnergyModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_network_view_days
@@ -55,7 +55,7 @@ class StorageEnergyModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                     FROM fil_miner_view_days
@@ -70,17 +70,29 @@ class StorageEnergyModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableSealed(start, end, filter, miner) {
+    async VariableStorageEnergy(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))', start, end, filter, miner);
+            result = await this.MinerQuery('ROUND(AVG(total))*0.000003221225472', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))', start, end, filter);
+            result = await this.NetworkQuery('ROUND(AVG(total))*0.000003221225472', start, end, filter);
         }
 
         return result;
     }
+
+    // async VariableUsedCapacity(start, end, filter, miner) {
+    //     var result;
+    //
+    //     if (miner) {
+    //         result = await this.MinerQuery('ROUND(AVG(used))', start, end, filter, miner);
+    //     } else {
+    //         result = await this.NetworkQuery('ROUND(AVG(used))', start, end, filter);
+    //     }
+    //
+    //     return result;
+    // }
 
     async Query(id, start, end, filter, miner) {
         INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
@@ -97,14 +109,23 @@ class StorageEnergyModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - Sealed
-        let sealedData = await this.VariableSealed(start, end, filter, miner);
-        let sealedVariable = {
-            title: 'Capacity per day',
-            data: sealedData,
+        // variable 1 - Total Capacity
+        let storageEnergyData = await this.VariableStorageEnergy(start, end, filter, miner);
+        let storageEnergyVariable = {
+            title: 'Storage Energy',
+            data: storageEnergyData,
         }
 
-        result.data.push(sealedVariable);
+        result.data.push(storageEnergyVariable);
+
+        // // variable 2 - Used Capacity
+        // let usedCapacityData = await this.VariableUsedCapacity(start, end, filter, miner);
+        // let usedCapacityVariable = {
+        //     title: 'Used Capacity',
+        //     data: usedCapacityData,
+        // }
+
+        // result.data.push(usedCapacityVariable);
 
         return result;
     }
@@ -119,20 +140,20 @@ class StorageEnergyModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','sealed','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch as sealed,timestamp \
+                    fields = ['epoch','miner','storage_energy_kW','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,miner,total*0.000003221225472,timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','sealed','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total_per_epoch as sealed,timestamp \
+                    fields = ['epoch','storage_energy_kW','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,total*0.000003221225472,timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
-                 
+
 
 
                 if (result?.rows) {
@@ -154,5 +175,5 @@ class StorageEnergyModel {
 }
 
 module.exports = {
-    StorageEnergyModel
+    CapacityModel
 };
