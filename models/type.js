@@ -7,6 +7,8 @@ var CATEGORY  = {
 var DATA_TYPE  = {
     TIME  : 'time',
     GiB     : 'GiB',
+    kWh     : 'kWh',
+    kW     : 'kW',
     PERCENTAGE : 'percentage'
 };
 

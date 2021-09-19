@@ -7,10 +7,14 @@ const pool = new Pool(config.database);
 const { CapacityModel } = require('./001_capacity-model');
 const { FractionModel } = require('./002_fraction-model');
 const { SealedModel } = require('./003_sealed-model');
+const { SealingEnergyModel } = require('./004_sealing_energy-model');
+const { StorageEnergyModel } = require('./005_storage_energy-model');
 
 let capacityModel = new CapacityModel(pool);
 let fractionModel = new FractionModel(pool);
 let sealedModel = new SealedModel(pool);
+let sealingEnergyModel = new SealingEnergyModel(pool);
+let storageEnergyModel = new StorageEnergyModel(pool);
 
 class Models {
     constructor() {
@@ -22,6 +26,8 @@ class Models {
         this.Register(capacityModel);
         this.Register(fractionModel);
         this.Register(sealedModel);
+        this.Register(sealingEnergyModel);
+        this.Register(storageEnergyModel);
     }
 
     Register(model) {
