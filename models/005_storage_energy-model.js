@@ -175,5 +175,5 @@ class StorageEnergyModel {
 }
 
 module.exports = {
-    CapacityModel
+    StorageEnergyModel
 };

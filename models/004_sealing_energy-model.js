@@ -154,5 +154,5 @@ class SealingEnergyModel {
 }
 
 module.exports = {
-    StorageEnergyModel
+    SealingEnergyModel
 };
