@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to store files';
+        this.name = 'Energy used to store sectors';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
