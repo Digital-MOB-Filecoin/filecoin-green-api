@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to store files';
+        this.name = 'Energy used to store sectors';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -70,29 +70,41 @@ class StorageEnergyModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableStorageEnergy(start, end, filter, miner) {
+    async VariableStorageEnergy_min(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.000003221225472', start, end, filter, miner);
+            result = await this.MinerQuery('ROUND(AVG(total))*0.0000009688', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.000003221225472', start, end, filter);
+            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000009688', start, end, filter);
         }
 
         return result;
     }
 
-    // async VariableUsedCapacity(start, end, filter, miner) {
-    //     var result;
-    //
-    //     if (miner) {
-    //         result = await this.MinerQuery('ROUND(AVG(used))', start, end, filter, miner);
-    //     } else {
-    //         result = await this.NetworkQuery('ROUND(AVG(used))', start, end, filter);
-    //     }
-    //
-    //     return result;
-    // }
+    async VariableStorageEnergy_estimate(start, end, filter, miner) {
+        var result;
+
+        if (miner) {
+            result = await this.MinerQuery('ROUND(AVG(total))*0.0000032212', start, end, filter, miner);
+        } else {
+            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000032212', start, end, filter);
+        }
+
+        return result;
+    }
+
+    async VariableStorageEnergy_max(start, end, filter, miner) {
+        var result;
+
+        if (miner) {
+            result = await this.MinerQuery('ROUND(AVG(total))*0.0000071583', start, end, filter, miner);
+        } else {
+            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000071583', start, end, filter);
+        }
+
+        return result;
+    }
 
     async Query(id, start, end, filter, miner) {
         INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
@@ -109,23 +121,36 @@ class StorageEnergyModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - Total Capacity
-        let storageEnergyData = await this.VariableStorageEnergy(start, end, filter, miner);
-        let storageEnergyVariable = {
-            title: 'Storage Energy',
-            data: storageEnergyData,
+        // variable 1 - storage energy lower bound
+        let storageEnergyData_min = await this.VariableStorageEnergy_min(start, end, filter, miner);
+        let storageEnergyVariable_min = {
+            title: 'Lower bound',
+            data: storageEnergyData_min,
         }
 
-        result.data.push(storageEnergyVariable);
+        result.data.push(storageEnergyVariable_min);
 
-        // // variable 2 - Used Capacity
-        // let usedCapacityData = await this.VariableUsedCapacity(start, end, filter, miner);
-        // let usedCapacityVariable = {
-        //     title: 'Used Capacity',
-        //     data: usedCapacityData,
-        // }
+        return result;
 
-        // result.data.push(usedCapacityVariable);
+        // variable 2 - storage energy estimate
+        let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
+        let storageEnergyVariable_est = {
+            title: 'Estimate',
+            data: storageEnergyData_est,
+        }
+
+        result.data.push(storageEnergyVariable_est);
+
+        return result;
+
+        // variable 3 - storage energy upper bound
+        let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
+        let storageEnergyVariable_max = {
+            title: 'Upper bound',
+            data: storageEnergyData_max,
+        }
+
+        result.data.push(storageEnergyVariable_max);
 
         return result;
     }
@@ -140,20 +165,25 @@ class StorageEnergyModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','storage_energy_kW','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total*0.000003221225472,timestamp \
+                    fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,miner,
+                      total*0.0000009688,
+                      total*0.0000032212,
+                      total*0.0000071583,timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','storage_energy_kW','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total*0.000003221225472,timestamp \
+                    fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,
+                      total*0.0000009688,
+                      total*0.0000032212,
+                      total*0.0000071583,timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
-
 
 
                 if (result?.rows) {

@@ -31,7 +31,7 @@ class SealedModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_network_view_days
@@ -55,7 +55,7 @@ class SealedModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                     FROM fil_miner_view_days
@@ -132,7 +132,7 @@ class SealedModel {
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
-                 
+
 
 
                 if (result?.rows) {

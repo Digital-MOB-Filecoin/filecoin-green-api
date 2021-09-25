@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class CapacityModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Used Capacity vs Total Capacity';
+        this.name = 'Total Capacity';
         this.category = CATEGORY.CAPACITY;
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.GiB;
@@ -31,7 +31,7 @@ class CapacityModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_network_view_days
@@ -55,7 +55,7 @@ class CapacityModel {
                 value,
                 timestamp AS start_date
                 FROM (
-                    SELECT 
+                    SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
                     FROM fil_miner_view_days
@@ -118,14 +118,14 @@ class CapacityModel {
 
         result.data.push(totalCapacityVariable);
 
-        // variable 2 - Used Capacity
-        let usedCapacityData = await this.VariableUsedCapacity(start, end, filter, miner);
-        let usedCapacityVariable = {
-            title: 'Used Capacity',
-            data: usedCapacityData,
-        }
-
-        result.data.push(usedCapacityVariable);
+        // // variable 2 - Used Capacity
+        // let usedCapacityData = await this.VariableUsedCapacity(start, end, filter, miner);
+        // let usedCapacityVariable = {
+        //     title: 'Used Capacity',
+        //     data: usedCapacityData,
+        // }
+        //
+        // result.data.push(usedCapacityVariable);
 
         return result;
     }
@@ -153,7 +153,7 @@ class CapacityModel {
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
-                 
+
 
 
                 if (result?.rows) {
