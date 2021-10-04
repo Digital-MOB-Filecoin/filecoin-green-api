@@ -212,15 +212,7 @@ class TotalEnergyModel {
 
                 if (miner) {
                     fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,
-                      total*0.0000009688,
-                      total*0.0000032212,
-                      total*0.0000071583,timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`
-
-                    `with sealing as(
+                    result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_network_view_epochs
                           WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
