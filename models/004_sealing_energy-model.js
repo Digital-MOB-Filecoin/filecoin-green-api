@@ -173,7 +173,7 @@ class SealingEnergyModel {
                 } else {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch,
-                      total_per_epoch*0.036683315675136,
+                      total_per_epoch*0.77419505,
                       total_per_epoch*4.40199788,
                       total_per_epoch*7.21554506,timestamp \
                     FROM fil_network_view_epochs \

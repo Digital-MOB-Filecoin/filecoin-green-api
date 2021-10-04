@@ -9,12 +9,14 @@ const { CapacityModel } = require('./001_capacity-model');
 const { SealedModel } = require('./003_sealed-model');
 const { SealingEnergyModel } = require('./004_sealing_energy-model');
 const { StorageEnergyModel } = require('./005_storage_energy-model');
+const { TotalEnergyModel } = require('./006_total_energy-model');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
 let sealedModel = new SealedModel(pool);
 let sealingEnergyModel = new SealingEnergyModel(pool);
 let storageEnergyModel = new StorageEnergyModel(pool);
+let totalEnergyModel = new TotalEnergyModel(pool);
 
 class Models {
     constructor() {
@@ -28,6 +30,7 @@ class Models {
         this.Register(sealedModel);
         this.Register(sealingEnergyModel);
         this.Register(storageEnergyModel);
+        this.Register(totalEnergyModel);
     }
 
     Register(model) {
