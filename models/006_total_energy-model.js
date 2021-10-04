@@ -47,7 +47,7 @@ class TotalEnergyModel {
                         ORDER BY timestamp
                   ),
 
-                  total_powers as (select storage.storage_power_kW, storage.storage_timestamp, sealing.sealing_timestamp, sealing.sealing_power_kW from storage
+                  total_powers as (select storage.storage_power_kW, storage.storage_timestamp, sealing.sealing_timestamp, coalesce(sealing.sealing_power_kW,0) as sealing_power_kW from storage
                   full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                   SELECT
@@ -87,7 +87,7 @@ class TotalEnergyModel {
                        ORDER BY timestamp
                  ),
 
-                 total_powers as (select storage.storage_power_kW, storage.storage_timestamp, sealing.sealing_timestamp, sealing.sealing_power_kW from storage
+                 total_powers as (select storage.storage_power_kW, storage.storage_timestamp, sealing.sealing_timestamp, coalesce(sealing.sealing_power_kW,0) as sealing_power_kW from storage
                  full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                  SELECT
@@ -226,7 +226,7 @@ class TotalEnergyModel {
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
-                    total_metrics as (select storage.stored_GiB, storage.storage_epoch, storage.storage_timestamp, storage.storage_miner, sealing.sealing_added_GiB, sealing.sealing_epoch, sealing.sealing_timestamp, sealing.sealing_miner from storage
+                    total_metrics as (select storage.stored_GiB, storage.storage_epoch, storage.storage_timestamp, storage.storage_miner, coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, sealing.sealing_epoch, sealing.sealing_timestamp, sealing.sealing_miner from storage
                     full outer join sealing on storage.storage_epoch = sealing.sealing_epoch)
 
                     SELECT
@@ -255,7 +255,7 @@ class TotalEnergyModel {
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
-                    total_metrics as (select storage.stored_GiB, storage.storage_epoch, storage.storage_timestamp, sealing.sealing_added_GiB, sealing.sealing_epoch, sealing.sealing_timestamp from storage
+                    total_metrics as (select storage.stored_GiB, storage.storage_epoch, storage.storage_timestamp, coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, sealing.sealing_epoch, sealing.sealing_timestamp from storage
                     full outer join sealing on storage.storage_epoch = sealing.sealing_epoch)
 
                     SELECT
