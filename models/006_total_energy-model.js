@@ -30,7 +30,8 @@ class TotalEnergyModel {
                   with sealing as(
                     SELECT
                         ROUND(AVG(total_per_day))*${sealingCoeff} AS sealing_power_kW,
-                        date_trunc('${filter}', date::date) AS sealing_timestamp
+                        date_trunc('${filter}', date::date) AS sealing_timestamp,
+                        date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
@@ -40,7 +41,8 @@ class TotalEnergyModel {
                   storage as(
                     SELECT
                         ROUND(AVG(total))*${storageCoeff} AS storage_power_kW,
-                        date_trunc('${filter}', date::date) AS storage_timestamp
+                        date_trunc('${filter}', date::date) AS storage_timestamp,
+                        date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
@@ -54,9 +56,9 @@ class TotalEnergyModel {
                     (storage_power_kW + sealing_power_kW) * ${pue} as value,
                     storage_timestamp AS start_date
                   FROM total_powers
-                )`);
+                `);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] NetworkQuery error:${e}`);
+            ERROR(`[TotalEnergyModel] NetworkQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
@@ -70,7 +72,8 @@ class TotalEnergyModel {
                   with sealing as(
                    SELECT
                        ROUND(AVG(total_per_day))*${sealingCoeff} AS sealing_power_kW,
-                       date_trunc('${filter}', date::date) AS sealing_timestamp
+                       date_trunc('${filter}', date::date) AS sealing_timestamp,
+                       date_trunc('${filter}', date::date) AS timestamp
                        FROM fil_miner_view_days
                        WHERE (miner='${miner}') AND date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
@@ -80,7 +83,8 @@ class TotalEnergyModel {
                  storage as(
                    SELECT
                        ROUND(AVG(total))*${storageCoeff} AS storage_power_kW,
-                       date_trunc('${filter}', date::date) AS storage_timestamp
+                       date_trunc('${filter}', date::date) AS storage_timestamp,
+                       date_trunc('${filter}', date::date) AS timestamp
                        FROM fil_miner_view_days
                        WHERE (miner='${miner}') AND date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
@@ -94,9 +98,9 @@ class TotalEnergyModel {
                    (storage_power_kW + sealing_power_kW) * ${pue} as value,
                    storage_timestamp AS start_date
                  FROM total_powers
-             )`);
+             `);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] MinerQuery error:${e}`);
+            ERROR(`[TotalEnergyModel] MinerQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
@@ -164,8 +168,6 @@ class TotalEnergyModel {
 
         result.data.push(totalEnergyVariable_min);
 
-        return result;
-
         // variable 2 - total energy estimate
         let totalEnergyData_est = await this.VariableTotalEnergy_estimate(start, end, filter, miner);
         let totalEnergyVariable_est = {
@@ -174,8 +176,6 @@ class TotalEnergyModel {
         }
 
         result.data.push(totalEnergyVariable_est);
-
-        return result;
 
         // variable 3 - total energy upper bound
         let totalEnergyData_max = await this.VariableTotalEnergy_max(start, end, filter, miner);

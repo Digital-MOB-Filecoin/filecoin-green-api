@@ -130,8 +130,6 @@ class StorageEnergyModel {
 
         result.data.push(storageEnergyVariable_min);
 
-        return result;
-
         // variable 2 - storage energy estimate
         let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
         let storageEnergyVariable_est = {
@@ -140,8 +138,6 @@ class StorageEnergyModel {
         }
 
         result.data.push(storageEnergyVariable_est);
-
-        return result;
 
         // variable 3 - storage energy upper bound
         let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
