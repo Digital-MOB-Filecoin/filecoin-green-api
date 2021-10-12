@@ -22,6 +22,10 @@ class SealedModel {
         return this.category;
     }
 
+    Details() {
+        return "**Committed capacity added per day** model";
+    }
+
     async NetworkQuery(formula, start, end, filter) {
         var result;
 

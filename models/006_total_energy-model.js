@@ -22,6 +22,10 @@ class TotalEnergyModel {
         return this.category;
     }
 
+    Details() {
+        return "**Total electrical energy used including sealing, storage and infrastructure** model";
+    }
+
     async NetworkQuery(sealingCoeff, storageCoeff, pue, start, end, filter) {
         var result;
 
@@ -168,15 +172,6 @@ class TotalEnergyModel {
 
         result.data.push(totalEnergyVariable_min);
 
-        // variable 2 - total energy estimate
-        let totalEnergyData_est = await this.VariableTotalEnergy_estimate(start, end, filter, miner);
-        let totalEnergyVariable_est = {
-            title: 'Estimate',
-            data: totalEnergyData_est,
-        }
-
-        result.data.push(totalEnergyVariable_est);
-
         // variable 3 - total energy upper bound
         let totalEnergyData_max = await this.VariableTotalEnergy_max(start, end, filter, miner);
         let totalEnergyVariable_max = {
@@ -185,6 +180,15 @@ class TotalEnergyModel {
         }
 
         result.data.push(totalEnergyVariable_max);
+
+        // variable 2 - total energy estimate
+        let totalEnergyData_est = await this.VariableTotalEnergy_estimate(start, end, filter, miner);
+        let totalEnergyVariable_est = {
+            title: 'Estimate',
+            data: totalEnergyData_est,
+        }
+        
+        result.data.push(totalEnergyVariable_est);
 
         return result;
     }

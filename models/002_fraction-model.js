@@ -22,6 +22,10 @@ class FractionModel {
         return this.category;
     }
 
+    Details() {
+        return "**Fraction Used** model";
+    }
+
     async NetworkQuery(formula, start, end, filter) {
         var result;
 

@@ -113,7 +113,7 @@ function add_time_interval(start, end, filter, rows) {
 }
 
 function ValidModel(obj) {
-    return implementsMethods(obj, 'Name', 'Category','Query', 'Export');
+    return implementsMethods(obj, 'Name', 'Category','Query', 'Export', 'Details');
 }
 
 function Start(query) {

@@ -22,6 +22,10 @@ class CapacityModel {
         return this.category;
     }
 
+    Details() {
+        return "**Total Capacity** model";
+    }
+
     async NetworkQuery(formula, start, end, filter) {
         var result;
 

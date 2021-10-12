@@ -22,6 +22,10 @@ class StorageEnergyModel {
         return this.category;
     }
 
+    Details() {
+        return "**Energy used to store sectors** model";
+    }
+
     async NetworkQuery(formula, start, end, filter) {
         var result;
 
@@ -130,15 +134,6 @@ class StorageEnergyModel {
 
         result.data.push(storageEnergyVariable_min);
 
-        // variable 2 - storage energy estimate
-        let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
-        let storageEnergyVariable_est = {
-            title: 'Estimate',
-            data: storageEnergyData_est,
-        }
-
-        result.data.push(storageEnergyVariable_est);
-
         // variable 3 - storage energy upper bound
         let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
         let storageEnergyVariable_max = {
@@ -147,6 +142,15 @@ class StorageEnergyModel {
         }
 
         result.data.push(storageEnergyVariable_max);
+
+        // variable 2 - storage energy estimate
+        let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
+        let storageEnergyVariable_est = {
+            title: 'Estimate',
+            data: storageEnergyData_est,
+        }
+        
+        result.data.push(storageEnergyVariable_est);
 
         return result;
     }

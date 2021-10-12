@@ -37,7 +37,7 @@ class Models {
         let id = this.models.length;
         if (ValidModel(model)) {
             this.models.push(model)
-            this.models_list.push({id: id, name: model.Name(), category: model.Category()});
+            this.models_list.push({id: id, name: model.Name(), category: model.Category(), details: model.Details()});
 
             INFO(`[Models] register model ${model.Name()} , id : ${id}`);
         } else {

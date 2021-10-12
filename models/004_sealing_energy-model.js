@@ -22,6 +22,10 @@ class SealingEnergyModel {
         return this.category;
     }
 
+    Details() {
+        return "**Energy used to seal sectors** model";
+    }
+
     async NetworkQuery(formula, start, end, filter) {
         var result;
 
@@ -130,6 +134,15 @@ class SealingEnergyModel {
 
         result.data.push(sealingEVariable_min);
 
+        // variable 3 - Upper bound on sealing energy, averaged over one day
+        let sealingE_max = await this.VariableSealingEnergy_perDay_upper(start, end, filter, miner);
+        let sealingEVariable_max = {
+            title: 'Upper bound',
+            data: sealingE_max,
+        }
+        
+        result.data.push(sealingEVariable_max);
+
         // variable 2 - Estimated sealing energy, averaged over one day
         let sealingE_est = await this.VariableSealingEnergy_perDay_estimate(start, end, filter, miner);
         let sealingEVariable_est = {
@@ -138,15 +151,6 @@ class SealingEnergyModel {
         }
 
         result.data.push(sealingEVariable_est);
-
-        // variable 3 - Upper bound on sealing energy, averaged over one day
-        let sealingE_max = await this.VariableSealingEnergy_perDay_upper(start, end, filter, miner);
-        let sealingEVariable_max = {
-            title: 'Upper bound',
-            data: sealingE_max,
-        }
-
-        result.data.push(sealingEVariable_max);
 
         return result;
     }
