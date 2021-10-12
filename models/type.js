@@ -12,6 +12,12 @@ var DATA_TYPE  = {
     PERCENTAGE : 'percentage'
 };
 
+var COLOR = {
+    green : 'green',
+    orange : 'orange',
+    silver : 'silver'
+}
+
 var VERSION  = {
     v0  : 0
 };
@@ -19,5 +25,6 @@ var VERSION  = {
 module.exports = {
     CATEGORY,
     DATA_TYPE,
-    VERSION
+    VERSION,
+    COLOR
 }

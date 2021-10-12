@@ -1,7 +1,7 @@
 'use strict';
 
 const { INFO, ERROR } = require('../logs');
-const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
+const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
 class FractionModel {
@@ -105,6 +105,7 @@ class FractionModel {
         let fractionData = await this.VariableFraction(start, end, filter, miner);
         let fractionVariable = {
             title: 'Used Capacity',
+            color: COLOR.green,
             data: fractionData,
         }
 

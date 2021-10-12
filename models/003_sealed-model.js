@@ -1,7 +1,7 @@
 'use strict';
 
 const { INFO, ERROR } = require('../logs');
-const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
+const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
 class SealedModel {
@@ -105,6 +105,7 @@ class SealedModel {
         let sealedData = await this.VariableSealed(start, end, filter, miner);
         let sealedVariable = {
             title: 'Capacity per day',
+            color: COLOR.green,
             data: sealedData,
         }
 

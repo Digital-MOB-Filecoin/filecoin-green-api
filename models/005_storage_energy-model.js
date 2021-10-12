@@ -1,7 +1,7 @@
 'use strict';
 
 const { INFO, ERROR } = require('../logs');
-const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
+const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
 class StorageEnergyModel {
@@ -129,28 +129,31 @@ class StorageEnergyModel {
         let storageEnergyData_min = await this.VariableStorageEnergy_min(start, end, filter, miner);
         let storageEnergyVariable_min = {
             title: 'Lower bound',
+            color: COLOR.green,
             data: storageEnergyData_min,
         }
 
         result.data.push(storageEnergyVariable_min);
 
-        // variable 3 - storage energy upper bound
-        let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
-        let storageEnergyVariable_max = {
-            title: 'Upper bound',
-            data: storageEnergyData_max,
-        }
-
-        result.data.push(storageEnergyVariable_max);
-
         // variable 2 - storage energy estimate
         let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
         let storageEnergyVariable_est = {
             title: 'Estimate',
+            color: COLOR.silver,
             data: storageEnergyData_est,
         }
         
         result.data.push(storageEnergyVariable_est);
+
+        // variable 3 - storage energy upper bound
+        let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
+        let storageEnergyVariable_max = {
+            title: 'Upper bound',
+            color: COLOR.orange,
+            data: storageEnergyData_max,
+        }
+        
+        result.data.push(storageEnergyVariable_max);
 
         return result;
     }

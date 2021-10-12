@@ -1,7 +1,7 @@
 'use strict';
 
 const { INFO, ERROR } = require('../logs');
-const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
+const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
 class CapacityModel {
@@ -117,6 +117,7 @@ class CapacityModel {
         let totalCapacityData = await this.VariableTotalCapacity(start, end, filter, miner);
         let totalCapacityVariable = {
             title: 'Total Capacity',
+            color: COLOR.green,
             data: totalCapacityData,
         }
 

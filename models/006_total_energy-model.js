@@ -1,7 +1,7 @@
 'use strict';
 
 const { INFO, ERROR } = require('../logs');
-const { CATEGORY, DATA_TYPE, VERSION } = require('./type')
+const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
 class TotalEnergyModel {
@@ -167,28 +167,31 @@ class TotalEnergyModel {
         let totalEnergyData_min = await this.VariableTotalEnergy_min(start, end, filter, miner);
         let totalEnergyVariable_min = {
             title: 'Lower bound',
+            color: COLOR.green,
             data: totalEnergyData_min,
         }
 
         result.data.push(totalEnergyVariable_min);
 
-        // variable 3 - total energy upper bound
-        let totalEnergyData_max = await this.VariableTotalEnergy_max(start, end, filter, miner);
-        let totalEnergyVariable_max = {
-            title: 'Upper bound',
-            data: totalEnergyData_max,
-        }
-
-        result.data.push(totalEnergyVariable_max);
-
         // variable 2 - total energy estimate
         let totalEnergyData_est = await this.VariableTotalEnergy_estimate(start, end, filter, miner);
         let totalEnergyVariable_est = {
             title: 'Estimate',
+            color: COLOR.silver,
             data: totalEnergyData_est,
         }
         
         result.data.push(totalEnergyVariable_est);
+
+        // variable 3 - total energy upper bound
+        let totalEnergyData_max = await this.VariableTotalEnergy_max(start, end, filter, miner);
+        let totalEnergyVariable_max = {
+            title: 'Upper bound',
+            color: COLOR.orange,
+            data: totalEnergyData_max,
+        }
+        
+        result.data.push(totalEnergyVariable_max);
 
         return result;
     }
