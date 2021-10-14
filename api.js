@@ -277,11 +277,11 @@ async function handle_miners_list(query) {
         offset = 0;
     }
 
-    if (query?.sortBy != 'power') {
+    if (query?.sortBy && (query?.sortBy != 'power')) {
         sortBy = 'used';
     }
 
-    if (query?.order != 'desc') {
+    if (query?.order && (query?.order != 'desc')) {
         order = 'ASC';
     }
 
