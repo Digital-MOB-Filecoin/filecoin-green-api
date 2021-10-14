@@ -205,30 +205,30 @@ class TotalEnergyModel {
         try {
                 let result;
 
-                sealing_kW_per_GiB_block_min = '.77419505'
-                sealing_kW_per_GiB_block_est = '4.40199788'
-                sealing_kW_per_GiB_block_max = '7.21554506'
+                let sealing_kW_per_GiB_block_min = '.77419505';
+                let sealing_kW_per_GiB_block_est = '4.40199788';
+                let sealing_kW_per_GiB_block_max = '7.21554506';
 
-                storage_kW_per_GiB_min = '0.0000009688'
-                storage_kW_per_GiB_est = '0.0000032212'
-                storage_kW_per_GiB_max = '0.0000071583'
+                let storage_kW_per_GiB_min = '0.0000009688';
+                let storage_kW_per_GiB_est = '0.0000032212';
+                let storage_kW_per_GiB_max = '0.0000071583';
 
-                pue_min = 1.18
-                pue_est = 1.57
-                put_max = 1.93
+                let pue_min = 1.18;
+                let pue_est = 1.57;
+                let pue_max = 1.93;
 
                 if (miner) {
                     fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
-                          FROM fil_network_view_epochs
+                          FROM fil_miner_view_epochs
                           WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
                     storage as(
                       SELECT epoch as storage_epoch, miner as storage_miner, total AS stored_GiB, timestamp as storage_timestamp
-                          FROM fil_network_view_epochs
+                          FROM fil_miner_view_epochs
                           WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
@@ -243,8 +243,8 @@ class TotalEnergyModel {
                       (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est},
                       (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max},
                       storage_timestamp
-                    FROM total_powers
-                    )`);
+                    FROM total_metrics
+                    `);
 
                 } else {
                     fields = ['epoch','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
@@ -271,8 +271,8 @@ class TotalEnergyModel {
                       (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est},
                       (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max},
                       storage_timestamp
-                    FROM total_powers
-                    )`);
+                    FROM total_metrics
+                    `);
                 }
 
 
