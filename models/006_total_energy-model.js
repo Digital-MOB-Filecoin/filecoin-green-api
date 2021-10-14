@@ -237,12 +237,12 @@ class TotalEnergyModel {
                     full outer join sealing on storage.storage_epoch = sealing.sealing_epoch)
 
                     SELECT
-                      storage_epoch,
-                      storage_miner,
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min},
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est},
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max},
-                      storage_timestamp
+                      storage_epoch AS epoch,
+                      storage_miner AS miner,
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS total_energy_kW_lower,
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS total_energy_kW_estimate,
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS total_energy_kW_upper,
+                      storage_timestamp AS timestamp
                     FROM total_metrics
                     `);
 
@@ -266,11 +266,11 @@ class TotalEnergyModel {
                     full outer join sealing on storage.storage_epoch = sealing.sealing_epoch)
 
                     SELECT
-                      storage_epoch,
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min},
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est},
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max},
-                      storage_timestamp
+                      storage_epoch AS epoch,
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS total_energy_kW_lower,
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS total_energy_kW_estimate,
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS total_energy_kW_upper,
+                      storage_timestamp AS timestamp
                     FROM total_metrics
                     `);
                 }

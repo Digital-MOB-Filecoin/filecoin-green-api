@@ -170,9 +170,10 @@ class SealingEnergyModel {
                 if (miner) {
                     fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch,miner,
-                      total_per_epoch*0.77419505,
-                      total_per_epoch*4.40199788,
-                      total_per_epoch*7.21554506, timestamp \
+                      total_per_epoch*0.77419505 AS sealing_energy_kW_lower,
+                      total_per_epoch*4.40199788 AS sealing_energy_kW_estimate,
+                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper, 
+                      timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
@@ -180,9 +181,10 @@ class SealingEnergyModel {
                 } else {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch,
-                      total_per_epoch*0.77419505,
-                      total_per_epoch*4.40199788,
-                      total_per_epoch*7.21554506,timestamp \
+                      total_per_epoch*0.77419505 AS sealing_energy_kW_lower,
+                      total_per_epoch*4.40199788 AS sealing_energy_kW_estimate,
+                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper,
+                      timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
