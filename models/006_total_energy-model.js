@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class TotalEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Total electrical energy used including sealing, storage and infrastructure';
+        this.name = 'Total energy used (v1.0)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -23,7 +23,10 @@ class TotalEnergyModel {
     }
 
     Details() {
-        return "**Total electrical energy used including sealing, storage and infrastructure** model";
+        return `The total rate of electrical energy use. This is the sum of sealing and storage energy use, multiplied by a [Power Usage Effectiveness](https://en.wikipedia.org/wiki/Power_usage_effectiveness) (PUE) representing overhead energy costs such as cooling and power conversion. Bounds and estimate come from combining the bounds and estimates of sealing and storage energy, as well as different values of estimated PUE.
+
+**Network view:** Total electrical power used by the Filecoin network.
+**Storage Provider (SP) view:** Electrical power used by this SP.`;
     }
 
     async NetworkQuery(sealingCoeff, storageCoeff, pue, start, end, filter) {
@@ -180,7 +183,7 @@ class TotalEnergyModel {
             color: COLOR.silver,
             data: totalEnergyData_est,
         }
-        
+
         result.data.push(totalEnergyVariable_est);
 
         // variable 3 - total energy upper bound
@@ -190,7 +193,7 @@ class TotalEnergyModel {
             color: COLOR.orange,
             data: totalEnergyData_max,
         }
-        
+
         result.data.push(totalEnergyVariable_max);
 
         return result;

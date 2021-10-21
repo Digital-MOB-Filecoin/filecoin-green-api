@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class SealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to seal sectors';
+        this.name = 'Energy used to seal data (v1.0)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -23,7 +23,10 @@ class SealingEnergyModel {
     }
 
     Details() {
-        return "**Energy used to seal sectors** model";
+        return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the process of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
+          
+          **Network view:** Total electrical power used to seal data for the entire Filecoin network.
+          **Storage Provider (SP) view:** Electrical power used by this SP to seal data.`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -152,7 +155,7 @@ class SealingEnergyModel {
             color: COLOR.orange,
             data: sealingE_max,
         }
-                
+
         result.data.push(sealingEVariable_max);
 
         return result;
@@ -172,7 +175,7 @@ class SealingEnergyModel {
                     result = await this.pool.query(`SELECT epoch,miner,
                       total_per_epoch*0.77419505 AS sealing_energy_kW_lower,
                       total_per_epoch*4.40199788 AS sealing_energy_kW_estimate,
-                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper, 
+                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper,
                       timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \

@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to store sectors';
+        this.name = 'Energy used to store data (v1.0)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -23,7 +23,11 @@ class StorageEnergyModel {
     }
 
     Details() {
-        return "**Energy used to store sectors** model";
+        return `The energy used to store data over time, which is a component of the energy used by the Filecoin network. Storage energy use is estimated by multiplying storage capacity by a constant value. Bounds and estimate come from different values of this constant.
+
+**Network view:** Total electrical power used to store all data on the Filecoin network.
+**Storage Provider (SP) view:** Electrical power used by this SP to store data.  
+`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -142,7 +146,7 @@ class StorageEnergyModel {
             color: COLOR.silver,
             data: storageEnergyData_est,
         }
-        
+
         result.data.push(storageEnergyVariable_est);
 
         // variable 3 - storage energy upper bound
@@ -152,7 +156,7 @@ class StorageEnergyModel {
             color: COLOR.orange,
             data: storageEnergyData_max,
         }
-        
+
         result.data.push(storageEnergyVariable_max);
 
         return result;
