@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class CapacityModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Total Capacity';
+        this.name = 'Data storage capacity';
         this.category = CATEGORY.CAPACITY;
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.GiB;
@@ -23,7 +23,9 @@ class CapacityModel {
     }
 
     Details() {
-        return "**Total Capacity** model";
+        return `**Network view:** The total amount of data storage capacity contributed to Filecoin’s decentralized storage network, based on on-chain proofs.
+        **Storage Provider (SP) view:** The amount of data storage contributed by this SP, based on on-chain proofs.`
+";
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -116,7 +118,7 @@ class CapacityModel {
         // variable 1 - Total Capacity
         let totalCapacityData = await this.VariableTotalCapacity(start, end, filter, miner);
         let totalCapacityVariable = {
-            title: 'Total Capacity',
+            title: 'Data storage capacity',
             color: COLOR.green,
             data: totalCapacityData,
         }

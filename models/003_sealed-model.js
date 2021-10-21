@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class SealedModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Committed capacity added per day';
+        this.name = 'Data Storage capacity added per day';
         this.category = CATEGORY.CAPACITY;
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.GiB;
@@ -23,7 +23,8 @@ class SealedModel {
     }
 
     Details() {
-        return "**Committed capacity added per day** model";
+        return `**Network view:** New data storage capacity added to Filecoin’s decentralized storage network (sealed) per day.
+        **Storage Provider (SP) view:** The amount of new data storage contributed to the network (sealed) by this SP per day.`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
