@@ -24,9 +24,11 @@ class SealingEnergyModel {
 
     Details() {
         return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the process of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
-          
-          **Network view:** Total electrical power used to seal data for the entire Filecoin network.
-          **Storage Provider (SP) view:** Electrical power used by this SP to seal data.`;
+
+**Network view:** Total electrical power used to seal data for the entire Filecoin network.
+
+**Storage Provider (SP) view:** Electrical power used by this SP to seal data.
+`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -172,22 +174,14 @@ class SealingEnergyModel {
 
                 if (miner) {
                     fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,
-                      total_per_epoch*0.77419505 AS sealing_energy_kW_lower,
-                      total_per_epoch*4.40199788 AS sealing_energy_kW_estimate,
-                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper,
-                      timestamp \
+                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*0.77419505, total_per_epoch*4.40199788, total_per_epoch*7.21554506, timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,
-                      total_per_epoch*0.77419505 AS sealing_energy_kW_lower,
-                      total_per_epoch*4.40199788 AS sealing_energy_kW_estimate,
-                      total_per_epoch*7.21554506 AS sealing_energy_kW_upper,
-                      timestamp \
+                    result = await this.pool.query(`SELECT epoch, total_per_epoch*0.77419505, total_per_epoch*4.40199788, total_per_epoch*7.21554506, timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);

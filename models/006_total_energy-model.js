@@ -26,7 +26,9 @@ class TotalEnergyModel {
         return `The total rate of electrical energy use. This is the sum of sealing and storage energy use, multiplied by a [Power Usage Effectiveness](https://en.wikipedia.org/wiki/Power_usage_effectiveness) (PUE) representing overhead energy costs such as cooling and power conversion. Bounds and estimate come from combining the bounds and estimates of sealing and storage energy, as well as different values of estimated PUE.
 
 **Network view:** Total electrical power used by the Filecoin network.
-**Storage Provider (SP) view:** Electrical power used by this SP.`;
+
+**Storage Provider (SP) view:** Electrical power used by this SP.
+`;
     }
 
     async NetworkQuery(sealingCoeff, storageCoeff, pue, start, end, filter) {

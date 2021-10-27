@@ -26,7 +26,8 @@ class StorageEnergyModel {
         return `The energy used to store data over time, which is a component of the energy used by the Filecoin network. Storage energy use is estimated by multiplying storage capacity by a constant value. Bounds and estimate come from different values of this constant.
 
 **Network view:** Total electrical power used to store all data on the Filecoin network.
-**Storage Provider (SP) view:** Electrical power used by this SP to store data.  
+
+**Storage Provider (SP) view:** Electrical power used by this SP to store data.
 `;
     }
 
@@ -173,22 +174,14 @@ class StorageEnergyModel {
 
                 if (miner) {
                     fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,
-                      total*0.0000009688 AS storage_energy_kW_lower,
-                      total*0.0000032212 AS storage_energy_kW_estimate,
-                      total*0.0000071583 AS storage_energy_kW_upper,
-                      timestamp \
+                    result = await this.pool.query(`SELECT epoch, miner, total*0.0000009688, total*0.0000032212, total*0.0000071583, timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,
-                      total*0.0000009688 AS storage_energy_kW_lower,
-                      total*0.0000032212 AS storage_energy_kW_estimate,
-                      total*0.0000071583 AS storage_energy_kW_upper,
-                      timestamp \
+                    result = await this.pool.query(`SELECT epoch, total*0.0000009688, total*0.0000032212, total*0.0000071583, timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
