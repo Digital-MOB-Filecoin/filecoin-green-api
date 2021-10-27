@@ -24,7 +24,9 @@ class CapacityModel {
 
     Details() {
         return `**Network view:** The total amount of data storage capacity contributed to Filecoin’s decentralized storage network, based on on-chain proofs.
-        **Storage Provider (SP) view:** The amount of data storage contributed by this SP, based on on-chain proofs.`;
+
+**Storage Provider (SP) view:** The amount of data storage contributed by this SP, based on on-chain proofs.
+`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -146,15 +148,15 @@ class CapacityModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','commited','used','total','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,commited,used,total,timestamp \
+                    fields = ['epoch','miner','capacity_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,miner,total,timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','commited','used','total','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,commited,used,total,timestamp \
+                    fields = ['epoch','capacity_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,total,timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);

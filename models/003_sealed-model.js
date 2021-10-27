@@ -24,7 +24,9 @@ class SealedModel {
 
     Details() {
         return `**Network view:** New data storage capacity added to Filecoin’s decentralized storage network (sealed) per day.
-        **Storage Provider (SP) view:** The amount of new data storage contributed to the network (sealed) by this SP per day.`;
+
+**Storage Provider (SP) view:** The amount of new data storage contributed to the network (sealed) by this SP per day.
+`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -125,15 +127,15 @@ class SealedModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','sealed','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch as sealed,timestamp \
+                    fields = ['epoch','miner','sealed_this_epoch_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch,timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','sealed','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total_per_epoch as sealed,timestamp \
+                    fields = ['epoch','sealed_this_epoch_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT epoch,total_per_epoch,timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
