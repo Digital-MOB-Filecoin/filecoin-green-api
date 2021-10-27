@@ -24,8 +24,7 @@ class CapacityModel {
 
     Details() {
         return `**Network view:** The total amount of data storage capacity contributed to Filecoin’s decentralized storage network, based on on-chain proofs.
-        **Storage Provider (SP) view:** The amount of data storage contributed by this SP, based on on-chain proofs.`
-";
+        **Storage Provider (SP) view:** The amount of data storage contributed by this SP, based on on-chain proofs.`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
