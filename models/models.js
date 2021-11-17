@@ -10,7 +10,7 @@ const { SealedModel } = require('./003_sealed-model');
 const { SealingEnergyModel } = require('./004_sealing_energy-model');
 const { StorageEnergyModel } = require('./005_storage_energy-model');
 const { TotalEnergyModel } = require('./006_total_energy-model');
-const { SealingEnergySumModel } = require('./006_sealing-energy-sum-model');
+const { SealingEnergySumModel } = require('./007_sealing-energy-sum-model');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);

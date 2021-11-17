@@ -223,7 +223,7 @@ class TotalEnergyModel {
                 let pue_max = 1.93;
 
                 if (miner) {
-                    fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    fields = ['epoch','miner','total_energy_kw_lower','total_energy_kw_estimate','total_energy_kw_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_miner_view_epochs
@@ -252,7 +252,7 @@ class TotalEnergyModel {
                     `);
 
                 } else {
-                    fields = ['epoch','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    fields = ['epoch','total_energy_kw_lower','total_energy_kw_estimate','total_energy_kw_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_network_view_epochs
