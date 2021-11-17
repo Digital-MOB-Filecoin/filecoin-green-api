@@ -186,7 +186,7 @@ class SealingEnergySumModel {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch, SUM(total_per_epoch)*0.0064516254 as \"sealing_energy_kW_lower\", \
                                                                   SUM(total_per_epoch)*0.0366833157 as \"sealing_energy_kW_estimate\", \
-                                                                  SUM(total_per_epoch)*0.0601295421 as \"sealing_energy_kW_estimate\", \
+                                                                  SUM(total_per_epoch)*0.0601295421 as \"sealing_energy_kW_upper\", \
                                                                   timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \

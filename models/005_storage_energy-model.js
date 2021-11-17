@@ -183,7 +183,7 @@ class StorageEnergyModel {
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','storage_energy_kw_lower','storage_energy_kw_estimate','storage_energy_kw_upper','timestamp'];
+                    fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch, total*0.0000009688 as \"storage_energy_kW_lower\" \
                                                                 , total*0.0000032212 as \"storage_energy_kW_estimate\" \
                                                                 , total*0.0000071583 as \"storage_energy_kW_upper\" \
