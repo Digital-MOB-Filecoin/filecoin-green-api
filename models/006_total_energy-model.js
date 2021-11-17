@@ -223,7 +223,7 @@ class TotalEnergyModel {
                 let pue_max = 1.93;
 
                 if (miner) {
-                    fields = ['epoch','miner','total_energy_kw_lower','total_energy_kw_estimate','total_energy_kw_upper','timestamp'];
+                    fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_miner_view_epochs
@@ -244,15 +244,15 @@ class TotalEnergyModel {
                     SELECT
                       storage_epoch AS epoch,
                       storage_miner AS miner,
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS total_energy_kW_lower,
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS total_energy_kW_estimate,
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS total_energy_kW_upper,
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
                       storage_timestamp AS timestamp
                     FROM total_metrics
                     `);
 
                 } else {
-                    fields = ['epoch','total_energy_kw_lower','total_energy_kw_estimate','total_energy_kw_upper','timestamp'];
+                    fields = ['epoch','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_network_view_epochs
@@ -272,9 +272,9 @@ class TotalEnergyModel {
 
                     SELECT
                       storage_epoch AS epoch,
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS total_energy_kW_lower,
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS total_energy_kW_estimate,
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS total_energy_kW_upper,
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
                       storage_timestamp AS timestamp
                     FROM total_metrics
                     `);

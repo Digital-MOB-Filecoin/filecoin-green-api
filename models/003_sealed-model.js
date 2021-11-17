@@ -128,14 +128,14 @@ class SealedModel {
 
                 if (miner) {
                     fields = ['epoch','miner','sealed_this_epoch_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch,timestamp \
+                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch as \"sealed_this_epoch_GiB\",timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','sealed_this_epoch_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total_per_epoch,timestamp \
+                    result = await this.pool.query(`SELECT epoch,total_per_epoch as \"sealed_this_epoch_GiB\",timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);

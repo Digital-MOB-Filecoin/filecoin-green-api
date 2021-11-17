@@ -149,14 +149,14 @@ class CapacityModel {
 
                 if (miner) {
                     fields = ['epoch','miner','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total,timestamp \
+                    result = await this.pool.query(`SELECT epoch,miner,total as \"capacity_GiB\",timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total,timestamp \
+                    result = await this.pool.query(`SELECT epoch,total as \"capacity_GiB\",timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
