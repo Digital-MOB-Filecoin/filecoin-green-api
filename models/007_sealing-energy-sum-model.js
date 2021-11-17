@@ -180,7 +180,7 @@ class SealingEnergySumModel {
                                                                          timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,timestamp ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY epoch,miner,timestamp ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
