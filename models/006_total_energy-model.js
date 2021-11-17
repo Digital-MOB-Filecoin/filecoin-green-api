@@ -227,14 +227,14 @@ class TotalEnergyModel {
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
                           FROM fil_miner_view_epochs
-                          WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
+                          WHERE (miner='${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
                     storage as(
                       SELECT epoch as storage_epoch, miner as storage_miner, total AS stored_GiB, timestamp as storage_timestamp
                           FROM fil_miner_view_epochs
-                          WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
+                          WHERE (miner='${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
