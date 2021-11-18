@@ -5,7 +5,6 @@ const { ValidModel, Start, End, Filter, Offset, Limit, Miner } = require('./util
 const pool = new Pool(config.database);
 
 const { CapacityModel } = require('./001_capacity-model');
-const { CapacityModel2 } = require('./001_d_capacity-model_v2');
 // const { FractionModel } = require('./002_fraction-model');
 const { SealedModel } = require('./003_sealed-model');
 const { SealingEnergyModel } = require('./004_sealing_energy-model');
@@ -14,7 +13,6 @@ const { TotalEnergyModel } = require('./006_total_energy-model');
 const { SealingEnergySumModel } = require('./007_sealing-energy-sum-model');
 
 let capacityModel = new CapacityModel(pool);
-let capacityModelV2 = new CapacityModel2(pool);
 // let fractionModel = new FractionModel(pool);
 let sealedModel = new SealedModel(pool);
 let sealingEnergyModel = new SealingEnergyModel(pool);
@@ -31,7 +29,6 @@ class Models {
 
     LoadModels() {
         this.Register(capacityModel);
-        this.Register(capacityModelV2);
         // this.Register(fractionModel);
         this.Register(sealedModel);
         this.Register(sealingEnergyModel);
