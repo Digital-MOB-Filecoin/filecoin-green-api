@@ -38,7 +38,7 @@ class FractionModel {
                     SELECT 
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days
+                        FROM fil_network_view_days_v2
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -62,7 +62,7 @@ class FractionModel {
                     SELECT 
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days
+                    FROM fil_miner_view_days_v2
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp
                     ORDER BY timestamp
@@ -126,14 +126,14 @@ class FractionModel {
                 if (miner) {
                     fields = ['epoch','miner','fraction','timestamp'];
                     result = await this.pool.query(`SELECT epoch,miner,fraction_per_epoch as fraction,timestamp \
-                    FROM fil_miner_view_epochs \
+                    FROM fil_miner_view_epochs_v2 \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','fraction','timestamp'];
                     result = await this.pool.query(`SELECT epoch,fraction_per_epoch as fraction,timestamp \
-                    FROM fil_network_view_epochs \
+                    FROM fil_network_view_epochs_v2 \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }

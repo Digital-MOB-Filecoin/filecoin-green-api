@@ -43,7 +43,7 @@ class SealingEnergySumModel {
                     SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days
+                        FROM fil_network_view_days_v2
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -67,7 +67,7 @@ class SealingEnergySumModel {
                     SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days
+                    FROM fil_miner_view_days_v2
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp
                     ORDER BY timestamp
@@ -178,7 +178,7 @@ class SealingEnergySumModel {
                                                                          SUM(total_per_epoch)*0.0366833157 as \"sealing_energy_kW_estimate\", \
                                                                          SUM(total_per_epoch)*0.0601295421 as \"sealing_energy_kW_upper\", \
                                                                          timestamp \
-                    FROM fil_miner_view_epochs \
+                    FROM fil_miner_view_epochs_v2 \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     GROUP BY epoch,miner,timestamp ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
@@ -188,7 +188,7 @@ class SealingEnergySumModel {
                                                                   SUM(total_per_epoch)*0.0366833157 as \"sealing_energy_kW_estimate\", \
                                                                   SUM(total_per_epoch)*0.0601295421 as \"sealing_energy_kW_upper\", \
                                                                   timestamp \
-                    FROM fil_network_view_epochs \
+                    FROM fil_network_view_epochs_v2 \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     GROUP BY epoch,timestamp ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
