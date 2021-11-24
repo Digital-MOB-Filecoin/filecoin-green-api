@@ -7,8 +7,8 @@ const { add_time_interval, get_epoch } = require('./utils')
 class SealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to seal data (v1.0)';
-        this.category = CATEGORY.ENERGY; // see type.js
+        this.name = 'Energy used to seal data (v1.0.0)';
+        this.category = CATEGORY.DEPRECATED; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
@@ -176,7 +176,7 @@ class SealingEnergyModel {
                     fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
                                                                        , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
-                                                                       , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \ 
+                                                                       , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
                                                                        , timestamp \
                     FROM fil_miner_view_epochs_v2 \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \

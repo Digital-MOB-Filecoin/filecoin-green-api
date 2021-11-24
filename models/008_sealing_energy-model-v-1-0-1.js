@@ -4,11 +4,11 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
-class StorageEnergyModel {
+class SealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to store data (v1.0.0)';
-        this.category = CATEGORY.DEPRECATED; // see type.js
+        this.name = 'Energy used to seal data (v1.0.1)';
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
@@ -23,11 +23,11 @@ class StorageEnergyModel {
     }
 
     Details() {
-        return `The energy used to store data over time, which is a component of the energy used by the Filecoin network. Storage energy use is estimated by multiplying storage capacity by a constant value. Bounds and estimate come from different values of this constant.
+        return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the process of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
 
-**Network view:** Total electrical power used to store all data on the Filecoin network.
+**Network view:** Total electrical power used to seal data for the entire Filecoin network.
 
-**Storage Provider (SP) view:** Electrical power used by this SP to store data.
+**Storage Provider (SP) view:** Electrical power used by this SP to seal data.
 `;
     }
 
@@ -49,7 +49,7 @@ class StorageEnergyModel {
                         ORDER BY timestamp
                 ) q;`);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] NetworkQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
@@ -73,43 +73,43 @@ class StorageEnergyModel {
                     ORDER BY timestamp
              ) q;`);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] MinerQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
         }
 
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableStorageEnergy_min(start, end, filter, miner) {
+    async VariableSealingEnergy_perDay_min(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000009688', start, end, filter, miner);
+            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000009688', start, end, filter);
+            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter);
         }
 
         return result;
     }
 
-    async VariableStorageEnergy_estimate(start, end, filter, miner) {
+    async VariableSealingEnergy_perDay_estimate(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000032212', start, end, filter, miner);
+            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000032212', start, end, filter);
+            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter);
         }
 
         return result;
     }
 
-    async VariableStorageEnergy_max(start, end, filter, miner) {
+    async VariableSealingEnergy_perDay_upper(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000071583', start, end, filter, miner);
+            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000071583', start, end, filter);
+            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter);
         }
 
         return result;
@@ -130,35 +130,35 @@ class StorageEnergyModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - storage energy lower bound
-        let storageEnergyData_min = await this.VariableStorageEnergy_min(start, end, filter, miner);
-        let storageEnergyVariable_min = {
+        // variable 1 - Lower bound on sealing energy, averaged over one day
+        let sealingE_min = await this.VariableSealingEnergy_perDay_min(start, end, filter, miner);
+        let sealingEVariable_min = {
             title: 'Lower bound',
             color: COLOR.green,
-            data: storageEnergyData_min,
+            data: sealingE_min,
         }
 
-        result.data.push(storageEnergyVariable_min);
+        result.data.push(sealingEVariable_min);
 
-        // variable 2 - storage energy estimate
-        let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
-        let storageEnergyVariable_est = {
+        // variable 2 - Estimated sealing energy, averaged over one day
+        let sealingE_est = await this.VariableSealingEnergy_perDay_estimate(start, end, filter, miner);
+        let sealingEVariable_est = {
             title: 'Estimate',
             color: COLOR.silver,
-            data: storageEnergyData_est,
+            data: sealingE_est,
         }
 
-        result.data.push(storageEnergyVariable_est);
+        result.data.push(sealingEVariable_est);
 
-        // variable 3 - storage energy upper bound
-        let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
-        let storageEnergyVariable_max = {
+        // variable 3 - Upper bound on sealing energy, averaged over one day
+        let sealingE_max = await this.VariableSealingEnergy_perDay_upper(start, end, filter, miner);
+        let sealingEVariable_max = {
             title: 'Upper bound',
             color: COLOR.orange,
-            data: storageEnergyData_max,
+            data: sealingE_max,
         }
 
-        result.data.push(storageEnergyVariable_max);
+        result.data.push(sealingEVariable_max);
 
         return result;
     }
@@ -173,25 +173,26 @@ class StorageEnergyModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                       , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                       , total*0.0000071583 as \"storage_energy_kW_upper\" \
+                    fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
+                                                                       , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
+                                                                       , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
                                                                        , timestamp \
                     FROM fil_miner_view_epochs_v2 \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                , total*0.0000071583 as \"storage_energy_kW_upper\" \
+                    fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT epoch, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
+                                                                , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
+                                                                , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
                                                                 , timestamp \
                     FROM fil_network_view_epochs_v2 \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
+
 
 
                 if (result?.rows) {
@@ -213,5 +214,5 @@ class StorageEnergyModel {
 }
 
 module.exports = {
-    StorageEnergyModel
+    SealingEnergyModel
 };
