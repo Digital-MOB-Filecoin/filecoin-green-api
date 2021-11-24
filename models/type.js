@@ -1,7 +1,8 @@
 var CATEGORY  = {
     CAPACITY  : 'capacity',
     ENERGY     : 'energy',
-    EMISSIONS : 'emissions'
+    EMISSIONS : 'emissions',
+    DEPRECATED : 'deprecated'
 };
 
 var DATA_TYPE  = {
