@@ -8,7 +8,7 @@ class StorageEnergyModel {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Energy used to store data (v1.0.0)';
-        this.category = CATEGORY.DEPRECATED; // see type.js
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
