@@ -4,7 +4,7 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
-class SealingEnergyModel {
+class SealingEnergyModelv_1_0_1 {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Energy used to seal data (v1.0.1)';
@@ -214,5 +214,5 @@ class SealingEnergyModel {
 }
 
 module.exports = {
-    SealingEnergyModel
+    SealingEnergyModelv_1_0_1
 };
