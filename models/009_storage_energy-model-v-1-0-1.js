@@ -43,7 +43,7 @@ class StorageEnergyModelv_1_0_1 {
                     SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days_v2
+                        FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -67,7 +67,7 @@ class StorageEnergyModelv_1_0_1 {
                     SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days_v2
+                    FROM fil_miner_view_days
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp
                     ORDER BY timestamp
@@ -178,7 +178,7 @@ class StorageEnergyModelv_1_0_1 {
                                                                        , total*0.0000032212 as \"storage_energy_kW_estimate\" \
                                                                        , total*0.0000086973 as \"storage_energy_kW_upper\" \
                                                                        , timestamp \
-                    FROM fil_miner_view_epochs_v2 \
+                    FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
@@ -188,7 +188,7 @@ class StorageEnergyModelv_1_0_1 {
                                                                 , total*0.0000032212 as \"storage_energy_kW_estimate\" \
                                                                 , total*0.0000086973 as \"storage_energy_kW_upper\" \
                                                                 , timestamp \
-                    FROM fil_network_view_epochs_v2 \
+                    FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
