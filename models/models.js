@@ -34,6 +34,9 @@ class Models {
     }
 
     LoadModels() {
+        this.Register(totalEnergyModelv_1_0_1);
+        this.Register(storageEnergyModelv_1_0_1);
+        this.Register(sealingEnergyModelv_1_0_1);
         this.Register(capacityModel);
         // this.Register(fractionModel);
         this.Register(sealedModel);
@@ -41,9 +44,9 @@ class Models {
         // this.Register(storageEnergyModel);
         // this.Register(totalEnergyModel);
         //this.Register(sealingEnergySumModel);
-        this.Register(sealingEnergyModelv_1_0_1);
-        this.Register(storageEnergyModelv_1_0_1);
-        this.Register(totalEnergyModelv_1_0_1);
+
+
+
     }
 
     Register(model) {
