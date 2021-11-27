@@ -41,7 +41,7 @@ class CapacityModel {
                     SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days_v2
+                        FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -65,7 +65,7 @@ class CapacityModel {
                     SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days_v2
+                    FROM fil_miner_view_days
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp
                     ORDER BY timestamp
@@ -150,14 +150,14 @@ class CapacityModel {
                 if (miner) {
                     fields = ['epoch','miner','capacity_GiB','timestamp'];
                     result = await this.pool.query(`SELECT epoch,miner,total as \"capacity_GiB\",timestamp \
-                    FROM fil_miner_view_epochs_v2 \
+                    FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','capacity_GiB','timestamp'];
                     result = await this.pool.query(`SELECT epoch,total as \"capacity_GiB\",timestamp \
-                    FROM fil_network_view_epochs_v2 \
+                    FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }

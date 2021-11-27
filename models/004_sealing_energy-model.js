@@ -8,7 +8,7 @@ class SealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Energy used to seal data (v1.0.0)';
-        this.category = CATEGORY.DEPRECATED; // see type.js
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
@@ -43,7 +43,7 @@ class SealingEnergyModel {
                     SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days_v2
+                        FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -67,7 +67,7 @@ class SealingEnergyModel {
                     SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days_v2
+                    FROM fil_miner_view_days
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp
                     ORDER BY timestamp
@@ -178,7 +178,7 @@ class SealingEnergyModel {
                                                                        , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
                                                                        , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
                                                                        , timestamp \
-                    FROM fil_miner_view_epochs_v2 \
+                    FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
@@ -188,7 +188,7 @@ class SealingEnergyModel {
                                                                 , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
                                                                 , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
                                                                 , timestamp \
-                    FROM fil_network_view_epochs_v2 \
+                    FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
                     ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }

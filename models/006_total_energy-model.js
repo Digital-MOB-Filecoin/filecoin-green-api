@@ -8,7 +8,7 @@ class TotalEnergyModel {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Total energy used (v1.0.0)';
-        this.category = CATEGORY.DEPRECATED; // see type.js
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
         this.version = VERSION.v0;
@@ -41,7 +41,7 @@ class TotalEnergyModel {
                         ROUND(AVG(total_per_day))*${sealingCoeff} AS sealing_power_kW,
                         date_trunc('${filter}', date::date) AS sealing_timestamp,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days_v2
+                        FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -52,7 +52,7 @@ class TotalEnergyModel {
                         ROUND(AVG(total))*${storageCoeff} AS storage_power_kW,
                         date_trunc('${filter}', date::date) AS storage_timestamp,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days_v2
+                        FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp
                         ORDER BY timestamp
@@ -83,7 +83,7 @@ class TotalEnergyModel {
                        ROUND(AVG(total_per_day))*${sealingCoeff} AS sealing_power_kW,
                        date_trunc('${filter}', date::date) AS sealing_timestamp,
                        date_trunc('${filter}', date::date) AS timestamp
-                       FROM fil_miner_view_days_v2
+                       FROM fil_miner_view_days
                        WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
                        ORDER BY timestamp
@@ -94,7 +94,7 @@ class TotalEnergyModel {
                        ROUND(AVG(total))*${storageCoeff} AS storage_power_kW,
                        date_trunc('${filter}', date::date) AS storage_timestamp,
                        date_trunc('${filter}', date::date) AS timestamp
-                       FROM fil_miner_view_days_v2
+                       FROM fil_miner_view_days
                        WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
                        ORDER BY timestamp
@@ -226,14 +226,14 @@ class TotalEnergyModel {
                     fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
-                          FROM fil_miner_view_epochs_v2
+                          FROM fil_miner_view_epochs
                           WHERE (miner='${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
                     storage as(
                       SELECT epoch as storage_epoch, miner as storage_miner, total AS stored_GiB, timestamp as storage_timestamp
-                          FROM fil_miner_view_epochs_v2
+                          FROM fil_miner_view_epochs
                           WHERE (miner='${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
@@ -255,14 +255,14 @@ class TotalEnergyModel {
                     fields = ['epoch','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
-                          FROM fil_network_view_epochs_v2
+                          FROM fil_network_view_epochs
                           WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),
 
                     storage as(
                       SELECT epoch as storage_epoch, total AS stored_GiB, timestamp as storage_timestamp
-                          FROM fil_network_view_epochs_v2
+                          FROM fil_network_view_epochs
                           WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)})
                           ORDER BY epoch LIMIT ${limit} OFFSET ${offset}
                     ),

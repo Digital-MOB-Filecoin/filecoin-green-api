@@ -267,7 +267,7 @@ async function handle_miners_list(query) {
     let limit = query?.limit;
     let offset = query?.offset;
     let order = 'DESC';
-    let sortBy = 'power';
+    let sortBy = 'used';
 
     if (!limit) {
         limit = 10;
@@ -288,8 +288,8 @@ async function handle_miners_list(query) {
     INFO(`[HandleMinersList] limit:${limit}, offset:${offset}`);
 
     try {
-        let count_result = await pool.query(`SELECT COUNT(miner) FROM fil_miners_view;`);
-        let miners_result = await pool.query(`SELECT * FROM fil_miners_view ORDER BY ${sortBy} ${order} LIMIT ${limit} OFFSET ${offset} ;`);
+        let count_result = await pool.query(`SELECT COUNT(miner) FROM fil_miners_view_v3;`);
+        let miners_result = await pool.query(`SELECT * FROM fil_miners_view_v3 ORDER BY ${sortBy} ${order} LIMIT ${limit} OFFSET ${offset} ;`);
         result.pagination.total = count_result.rows[0]?.count;
         result.pagination.limit = limit;
         result.pagination.offset = offset;
