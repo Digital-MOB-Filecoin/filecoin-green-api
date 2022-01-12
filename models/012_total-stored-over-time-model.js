@@ -80,9 +80,9 @@ class TotalStoredOverTimeModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('SUM(SUM(total_per_day * 24)) OVER(ORDER BY date)', start, end, filter, miner);
+            result = await this.MinerQuery('SUM(total_per_day * 24) OVER(ORDER BY date)', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('SUM(SUM(total_per_day * 24)) OVER(ORDER BY date)', start, end, filter);
+            result = await this.NetworkQuery('SUM(total_per_day * 24) OVER(ORDER BY date)', start, end, filter);
         }
 
         return result;
