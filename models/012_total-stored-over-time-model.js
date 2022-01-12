@@ -42,7 +42,7 @@ class TotalStoredOverTimeModel {
                             ${formula}                             AS value
                         FROM fil_network_view_days
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp,date
+                        GROUP BY timestamp,date,total_per_day
                         ORDER BY timestamp
                 ) q;`);
         } catch (e) {
@@ -66,7 +66,7 @@ class TotalStoredOverTimeModel {
                         ${formula} AS value
                     FROM fil_miner_view_days
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner,timestamp,date
+                    GROUP BY miner,timestamp,date,total_per_day
                     ORDER BY timestamp
              ) q;`);
         } catch (e) {
