@@ -127,19 +127,19 @@ class TotalStoredOverTimeModel {
 
                 if (miner) {
                     fields = ['epoch','miner','total_data_over_time_GiB_h','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
+                    result = await this.pool.query(`SELECT epoch, miner, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
                                                                          timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,miner,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY epoch,miner,timestamp,total ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
                     fields = ['epoch','total_data_over_time_GiB_h','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total_per_epoch / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
+                    result = await this.pool.query(`SELECT epoch, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
                                                                   timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY epoch,timestamp,total ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
 
 
