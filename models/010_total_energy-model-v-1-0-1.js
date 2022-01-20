@@ -83,7 +83,7 @@ class TotalEnergyModelv_1_0_1 {
                        ROUND(AVG(total_per_day))*${sealingCoeff} AS sealing_power_kW,
                        date_trunc('${filter}', date::date) AS sealing_timestamp,
                        date_trunc('${filter}', date::date) AS timestamp
-                       FROM fil_miner_view_days
+                       FROM fil_miner_view_days_v3
                        WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
                        ORDER BY timestamp
@@ -94,7 +94,7 @@ class TotalEnergyModelv_1_0_1 {
                        ROUND(AVG(total))*${storageCoeff} AS storage_power_kW,
                        date_trunc('${filter}', date::date) AS storage_timestamp,
                        date_trunc('${filter}', date::date) AS timestamp
-                       FROM fil_miner_view_days
+                       FROM fil_miner_view_days_v3
                        WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                        GROUP BY timestamp
                        ORDER BY timestamp

@@ -242,7 +242,7 @@ async function handle_miner_request(fields, query) {
                     ROUND(AVG(total_per_day))           AS total_per_day,
                     (AVG(used) / AVG(total))            AS fraction,
                     date_trunc('${filter}', date::date) AS timestamp
-                FROM fil_miner_view_days
+                FROM fil_miner_view_days_v3
                 WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                 GROUP BY miner,timestamp
                 ORDER BY timestamp
