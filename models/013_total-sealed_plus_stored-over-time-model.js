@@ -6,10 +6,10 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
 
-class TotalStoredOverTimeModel {
+class TotalSealedStoredOverTimeModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Data stored over time in GiB*hours';
+        this.name = 'Data sealed + stored over time in GiB*hours';
         this.category = CATEGORY.CAPACITY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.GiB;
@@ -25,7 +25,7 @@ class TotalStoredOverTimeModel {
     }
 
     Details() {
-        return `Data stored over time in GiB*hours`;
+        return `Data sealed + stored over time in GiB*hours`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -76,13 +76,13 @@ class TotalStoredOverTimeModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableTotalStoredOverTime(start, end, filter, miner) {
+    async VariableSealedStoredOverTime(start, end, filter, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('SUM(ROUND(AVG(total)) * 24) OVER(ORDER BY date)', start, end, filter, miner);
+            result = await this.MinerQuery('SUM(ROUND(AVG(total)) * 24 + SUM(total_per_day)) OVER(ORDER BY date)', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('SUM(ROUND(AVG(total)) * 24) OVER(ORDER BY date)', start, end, filter);
+            result = await this.NetworkQuery('SUM(ROUND(AVG(total)) * 24 + SUM(total_per_day)) OVER(ORDER BY date)', start, end, filter);
         }
 
         return result;
@@ -103,15 +103,15 @@ class TotalStoredOverTimeModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - Total sealed
-        let variableTotalStoredOverTime = await this.VariableTotalStoredOverTime(start, end, filter, miner);
-        let variableTotalStoredOverTime_Data = {
-            title: 'Stored',
+        // variable 1 - Total sealed + stored
+        let variableTotalSealedStoredOverTime = await this.VariableSealedStoredOverTime(start, end, filter, miner);
+        let variableTotalSealedStoredOverTime_Data = {
+            title: 'Sealed + Stored',
             color: COLOR.silver,
-            data: variableTotalStoredOverTime,
+            data: variableTotalSealedStoredOverTime,
         }
 
-        result.data.push(variableTotalStoredOverTime_Data);
+        result.data.push(variableTotalSealedStoredOverTime_Data);
 
         return result;
     }
@@ -126,20 +126,22 @@ class TotalStoredOverTimeModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','total_data_over_time_GiB_h','timestamp'];
+                    fields = ['epoch','miner','total_data_over_time_GiB_h','total_sealed_GiB','timestamp'];
                     result = await this.pool.query(`SELECT epoch, miner, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
-                                                                         timestamp \
+                                                                            total_per_epoch as \"total_sealed_GiB\", \
+                                                                            timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,miner,timestamp,total ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY epoch,miner,timestamp,total,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','total_data_over_time_GiB_h','timestamp'];
+                    fields = ['epoch','total_data_over_time_GiB_h','total_sealed_GiB','timestamp'];
                     result = await this.pool.query(`SELECT epoch, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
-                                                                  timestamp \
+                                                                    total_per_epoch as \"total_sealed_GiB\", \
+                                                                    timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,timestamp,total ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY epoch,timestamp,total,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
                 }
 
 
@@ -148,7 +150,7 @@ class TotalStoredOverTimeModel {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalStoredOverTimeModel] Export error:${e}`);
+            ERROR(`[TotalSealedStoredOverTimeModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -163,5 +165,5 @@ class TotalStoredOverTimeModel {
 }
 
 module.exports = {
-    TotalStoredOverTimeModel
+    TotalSealedStoredOverTimeModel
 };
