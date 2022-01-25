@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class SealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Energy used to seal data (v1.0.0)';
+        this.name = 'Energy used to seal data (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;

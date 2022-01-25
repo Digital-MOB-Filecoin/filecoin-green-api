@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class TotalEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Total energy used (v1.0.0)';
+        this.name = 'Total energy used (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -145,9 +145,9 @@ class TotalEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('0.00250540', '0.0000071583', 1.93, start, end, filter, miner);
+            result = await this.MinerQuery('0.00250540', '0.0000086973', 1.93, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('0.00250540', '0.0000071583', 1.93, start, end, filter);
+            result = await this.NetworkQuery('0.00250540', '0.0000086973', 1.93, start, end, filter);
         }
 
         return result;
@@ -216,7 +216,7 @@ class TotalEnergyModel {
 
                 let storage_kW_per_GiB_min = '0.0000009688';
                 let storage_kW_per_GiB_est = '0.0000032212';
-                let storage_kW_per_GiB_max = '0.0000071583';
+                let storage_kW_per_GiB_max = '0.0000086973';
 
                 let pue_min = 1.18;
                 let pue_est = 1.57;
