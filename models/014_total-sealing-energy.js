@@ -4,13 +4,18 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+// Model parameters, in kWh/GiB
+let sealing_kWh_per_GiB_block_min = '0.0064516254';
+let sealing_kWh_per_GiB_block_est = '0.0366833157';
+let sealing_kWh_per_GiB_block_max = '0.0601295421';
+
 class TotalSealedModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Total amount of data sealed in GiB';
-        this.category = CATEGORY.CAPACITY; // see type.js
+        this.name = 'Cumulative amount of energy used to seal files in kWh (v1.0.1)';
+        this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
-        this.y = DATA_TYPE.GiB;
+        this.y = DATA_TYPE.kWh;
         this.version = VERSION.v0;
     }
 
@@ -23,7 +28,7 @@ class TotalSealedModel {
     }
 
     Details() {
-        return `Total amount of data sealed in GiB`;
+        return `Cumulative amount of energy used to seal files in kWh (v1.0.1)`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -74,13 +79,13 @@ class TotalSealedModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableTotalSealed(start, end, filter, miner) {
+    async VariableTotalSealed(start, end, filter, sealingParam, miner) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('SUM(SUM(total_per_day)) OVER(ORDER BY date)', start, end, filter, miner);
+            result = await this.MinerQuery(`SUM(SUM(total_per_day))*${sealingParam} OVER(ORDER BY date)`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('SUM(SUM(total_per_day)) OVER(ORDER BY date)', start, end, filter);
+            result = await this.NetworkQuery(`SUM(SUM(total_per_day))*${sealingParam} OVER(ORDER BY date)`, start, end, filter);
         }
 
         return result;
@@ -101,15 +106,32 @@ class TotalSealedModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - Total sealed
-        let variableTotalSealed = await this.VariableTotalSealed(start, end, filter, miner);
-        let variableTotalSealed_Data = {
-            title: 'Sealed',
-            color: COLOR.silver,
-            data: variableTotalSealed,
+        // variable 1 - Minimum total sealing energy
+        let variableTotalSealingEnergy_min = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_min, miner);
+        let variableTotalSealingEnergy_min_data = {
+            title: 'Sealing Energy Lower Bound (v1.0.1)',
+            color: COLOR.green,
+            data: variableTotalSealingEnergy_min,
         }
+        result.data.push(variableTotalSealingEnergy_min_data);
 
-        result.data.push(variableTotalSealed_Data);
+        // variable 2 - Estimated total sealing energy
+        let variableTotalSealingEnergy_est = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_est, miner);
+        let variableTotalSealingEnergy_est_data = {
+            title: 'Sealing Energy Estimate (v1.0.1)',
+            color: COLOR.silver,
+            data: variableTotalSealingEnergy_est,
+        }
+        result.data.push(variableTotalSealingEnergy_est_data);
+
+        // variable 3 - Max total sealing energy
+        let variableTotalSealingEnergy_max = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_max, miner);
+        let variableTotalSealingEnergy_max_data = {
+            title: 'Sealing Energy Upper Bound (v1.0.1)',
+            color: COLOR.orange,
+            data: variableTotalSealingEnergy_max,
+        }
+        result.data.push(variableTotalSealingEnergy_max_data);
 
         return result;
     }
@@ -124,20 +146,46 @@ class TotalSealedModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','total_sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch as \"total_sealed_GiB\", \
+                    fields = ['epoch','miner','sealing_energy_kWh_min','sealing_energy_kWh_est','sealing_energy_kWh_max','timestamp'];
+                    result = await this.pool.query(`
+                      with baseQuery as(
+                        SELECT
+                          epoch,
+                          miner,
+                          SUM(SUM(total_per_epoch)) OVER(ORDER BY epoch)as \"total_sealed_GiB\", \
                                                                          timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,miner,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                      FROM fil_miner_view_epochs \
+                      WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
+                      GROUP BY epoch,miner,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset})
+
+                      SELECT
+                        epoch as epoch,
+                        miner as miner,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as sealing_energy_kWh_min,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as sealing_energy_kWh_est,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as sealing_energy_kWh_max,
+                        timestamp as timestamp
+                      FROM baseQuery`);
 
                 } else {
                     fields = ['epoch','total_sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total_per_epoch as \"total_sealed_GiB\", \
-                                                                  timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    result = await this.pool.query(`
+                      with baseQuery as(
+                        SELECT
+                          epoch,
+                          SUM(SUM(total_per_epoch)) OVER(ORDER BY epoch)as \"total_sealed_GiB\", \
+                                                                         timestamp \
+                      FROM fil_network_view_epochs \
+                      WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
+                      GROUP BY epoch,timestamp,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset})
+
+                      SELECT
+                        epoch as epoch,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as sealing_energy_kWh_min,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as sealing_energy_kWh_est,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as sealing_energy_kWh_max,
+                        timestamp as timestamp
+                      FROM baseQuery`);
                 }
 
 
