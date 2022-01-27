@@ -9,7 +9,7 @@ let sealing_kWh_per_GiB_block_min = '0.0064516254';
 let sealing_kWh_per_GiB_block_est = '0.0366833157';
 let sealing_kWh_per_GiB_block_max = '0.0601295421';
 
-class TotalSealedModel {
+class TotalSealingEnergyModel {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Cumulative amount of energy used to seal files in kWh (v1.0.1)';
@@ -83,9 +83,9 @@ class TotalSealedModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery(`SUM(SUM(total_per_day))*${sealingParam} OVER(ORDER BY date)`, start, end, filter, miner);
+            result = await this.MinerQuery(`(SUM(SUM(total_per_day)) OVER(ORDER BY date))*${sealingParam}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery(`SUM(SUM(total_per_day))*${sealingParam} OVER(ORDER BY date)`, start, end, filter);
+            result = await this.NetworkQuery(`(SUM(SUM(total_per_day)) OVER(ORDER BY date))*${sealingParam}`, start, end, filter);
         }
 
         return result;
@@ -194,7 +194,7 @@ class TotalSealedModel {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalSealedModel] Export error:${e}`);
+            ERROR(`[TotalSealingEnergyModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -209,5 +209,5 @@ class TotalSealedModel {
 }
 
 module.exports = {
-    TotalSealedModel
+    TotalSealingEnergyModel
 };
