@@ -161,14 +161,14 @@ class TotalSealingEnergyModel {
                       SELECT
                         epoch as epoch,
                         miner as miner,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as sealing_energy_kWh_min,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as sealing_energy_kWh_est,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as sealing_energy_kWh_max,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as \"sealing_energy_kWh_min\",
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as \"sealing_energy_kWh_est\",
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as \"sealing_energy_kWh_max\",
                         timestamp as timestamp
                       FROM baseQuery`);
 
                 } else {
-                    fields = ['epoch','total_sealed_GiB','timestamp'];
+                    fields = ['epoch','sealing_energy_kWh_min','sealing_energy_kWh_est','sealing_energy_kWh_max','timestamp'];
                     result = await this.pool.query(`
                       with baseQuery as(
                         SELECT
@@ -181,9 +181,9 @@ class TotalSealingEnergyModel {
 
                       SELECT
                         epoch as epoch,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as sealing_energy_kWh_min,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as sealing_energy_kWh_est,
-                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as sealing_energy_kWh_max,
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_min} as \"sealing_energy_kWh_min\",
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_est} as \"sealing_energy_kWh_est\",
+                        \"total_sealed_GiB\"*${sealing_kWh_per_GiB_block_max} as \"sealing_energy_kWh_max\",
                         timestamp as timestamp
                       FROM baseQuery`);
                 }
