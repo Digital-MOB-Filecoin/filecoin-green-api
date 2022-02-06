@@ -64,7 +64,7 @@ class TotalStoredOverTimeModel {
                     SELECT
                         date_trunc('${filter}', date::date) AS timestamp,
                         ${formula} AS value
-                    FROM fil_miner_view_days_v3
+                    FROM fil_miner_view_days_v4
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp,date,total_per_day
                     ORDER BY timestamp
