@@ -78,9 +78,9 @@ class RenewableEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('energyWh', start, end, filter, miner);
+            result = await this.MinerQuery('energyWh / 1000', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('SUM(energyWh)', start, end, filter);
+            result = await this.NetworkQuery('SUM(energyWh / 1000)', start, end, filter);
         }
 
         return result;
