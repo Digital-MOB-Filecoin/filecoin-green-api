@@ -44,6 +44,7 @@ class Models {
     }
 
     LoadModels() {
+        this.Register(renewableEnergyModel);
         this.Register(totalEnergyModelv_1_0_1);
         this.Register(storageEnergyModelv_1_0_1);
         this.Register(sealingEnergyModelv_1_0_1);
@@ -58,8 +59,7 @@ class Models {
         this.Register(totalStoredOverTimeModel);
         this.Register(totalSealedStoredOverTimeModel);
         this.Register(totalSealingEnergyModel);
-        this.Register(renewableEnergyModel);
-
+  
 
 
     }
