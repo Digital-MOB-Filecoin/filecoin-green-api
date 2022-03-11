@@ -18,6 +18,7 @@ const { TotalSealedModel } = require('./011_total-sealed-model');
 const { TotalStoredOverTimeModel } = require('./012_total-stored-over-time-model');
 const { TotalSealedStoredOverTimeModel } = require('./013_total-sealed_plus_stored-over-time-model');
 const { TotalSealingEnergyModel } = require('./014_total-sealing-energy');
+const { RenewableEnergyModel } = require('./015_renewable-energy-model');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -33,6 +34,7 @@ let totalSealedModel = new TotalSealedModel(pool);
 let totalStoredOverTimeModel = new TotalStoredOverTimeModel(pool);
 let totalSealedStoredOverTimeModel = new TotalSealedStoredOverTimeModel(pool);
 let totalSealingEnergyModel = new TotalSealingEnergyModel(pool);
+let renewableEnergyModel = new RenewableEnergyModel(pool);
 
 
 class Models {
@@ -56,6 +58,7 @@ class Models {
         this.Register(totalStoredOverTimeModel);
         this.Register(totalSealedStoredOverTimeModel);
         this.Register(totalSealingEnergyModel);
+        this.Register(renewableEnergyModel);
 
 
 
