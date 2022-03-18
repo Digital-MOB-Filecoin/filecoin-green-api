@@ -6,20 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
 
-const energy_conts_v1p0p1 = {
-  "min":{
-    "sealing_kWh_GiB":0.0064516254,
-    "storage_kW_GiB":0.0000009688
-  },
-  "est":{
-    "sealing_kWh_GiB":0.0366833157,
-    "storage_kW_GiB":0.0000032212
-  },
-  "max":{
-    "sealing_kWh_GiB":0.0601295421,
-    "storage_kW_GiB":0.0000086973
-  }
-}
+const energy_conts_v1p0p1 = require("./energy_params/v-1-0-1-perGiB.json")
 
 class CumulativeEnergyModel_v_1_0_1 {
     constructor(pool) {
@@ -95,9 +82,9 @@ class CumulativeEnergyModel_v_1_0_1 {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery(`SUM(ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) OVER(ORDER BY date)`, start, end, filter, miner);
+            result = await this.MinerQuery(`SUM( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue}) OVER(ORDER BY date)`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery(`SUM(ROUND(AVG(total)) * 24 *${consts.storage_kW_GiB} + SUM(total_per_day)* ${consts.sealing_kWh_GiB}) OVER(ORDER BY date)`, start, end, filter);
+            result = await this.NetworkQuery(`SUM( (ROUND(AVG(total)) * 24 *${consts.storage_kW_GiB} + SUM(total_per_day)* ${consts.sealing_kWh_GiB}) * ${consts.pue}) OVER(ORDER BY date)`, start, end, filter);
         }
 
         return result;
@@ -128,7 +115,7 @@ class CumulativeEnergyModel_v_1_0_1 {
         result.data.push(cumulativeEnergy_min);
 
         // Estimated cumulative energy use
-        let cumulativeEnergyData_est = await this.VariableSealedStoredOverTime(start, end, filter, miner, energy_conts_v1p0p1.est);
+        let cumulativeEnergyData_est = await this.VariableSealedStoredOverTime(start, end, filter, miner, energy_conts_v1p0p1.estimate);
         let cumulativeEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
