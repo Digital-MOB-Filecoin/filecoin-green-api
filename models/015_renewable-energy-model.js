@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class RenewableEnergyModel {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Average renewable energy certificate (REC)';
+        this.name = 'Cumulative renewable energy purchases ';
         this.category = CATEGORY.ENERGY;
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kWh;
@@ -23,7 +23,7 @@ class RenewableEnergyModel {
     }
 
     Details() {
-        return `Average renewable energy certificate (REC) purchase rate over time`;
+        return `Cumulative renewable energy certificate (REC) purchases over time`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -78,9 +78,9 @@ class RenewableEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('energyWh / 1000', start, end, filter, miner);
+            result = await this.MinerQuery('SUM(energyWh / 1000) OVER(ORDER BY date)', start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('SUM(energyWh / 1000)', start, end, filter);
+            result = await this.NetworkQuery('SUM(energyWh / 1000) OVER(ORDER BY date)', start, end, filter);
         }
 
         return result;
