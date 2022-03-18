@@ -36,7 +36,7 @@ let totalStoredOverTimeModel = new TotalStoredOverTimeModel(pool);
 let totalSealedStoredOverTimeModel = new TotalSealedStoredOverTimeModel(pool);
 let totalSealingEnergyModel = new TotalSealingEnergyModel(pool);
 let renewableEnergyModel = new RenewableEnergyModel(pool);
-let CumulativeEnergyModel_v_1_0_1 = new CumulativeEnergyModel_v_1_0_1(pool);
+let cumulativeEnergyModel_v_1_0_1 = new CumulativeEnergyModel_v_1_0_1(pool);
 
 
 class Models {
@@ -47,6 +47,7 @@ class Models {
 
     LoadModels() {
         this.Register(renewableEnergyModel);
+        this.Register(cumulativeEnergyModel_v_1_0_1);
         this.Register(totalEnergyModelv_1_0_1);
         this.Register(storageEnergyModelv_1_0_1);
         this.Register(sealingEnergyModelv_1_0_1);
@@ -61,10 +62,6 @@ class Models {
         this.Register(totalStoredOverTimeModel);
         this.Register(totalSealedStoredOverTimeModel);
         this.Register(totalSealingEnergyModel);
-        this.Register(CumulativeEnergyModel_v_1_0_1);
-
-
-
     }
 
     Register(model) {

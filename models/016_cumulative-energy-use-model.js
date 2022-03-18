@@ -6,7 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
 
-energy_conts_v1p0p1 = {
+const energy_conts_v1p0p1 = {
   "min":{
     "sealing_kWh_GiB":0.0064516254,
     "storage_kW_GiB":0.0000009688
@@ -21,7 +21,7 @@ energy_conts_v1p0p1 = {
   }
 }
 
-class TotalSealedStoredOverTimeModel {
+class CumulativeEnergyModel_v_1_0_1 {
     constructor(pool) {
         this.pool = pool;
         this.name = 'Cumulative Energy Use';
@@ -197,5 +197,5 @@ class TotalSealedStoredOverTimeModel {
 }
 
 module.exports = {
-    TotalSealedStoredOverTimeModel
+    CumulativeEnergyModel_v_1_0_1
 };
