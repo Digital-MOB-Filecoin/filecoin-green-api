@@ -40,7 +40,7 @@ class RenewableEnergyModel {
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_renewable_energy_view_v2
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp
+                        GROUP BY timestamp, date, energywh
                         ORDER BY timestamp
                 ) q;`);
         } catch (e) {
