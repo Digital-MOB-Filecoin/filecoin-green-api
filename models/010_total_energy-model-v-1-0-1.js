@@ -7,7 +7,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 class TotalEnergyModelv_1_0_1 {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Total energy used (v1.0.1)';
+        this.name = 'Energy consumption rate (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;

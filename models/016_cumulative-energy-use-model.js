@@ -11,7 +11,7 @@ const energy_conts_v1p0p1 = require("./energy_params/v-1-0-1-perGiB.json")
 class CumulativeEnergyModel_v_1_0_1 {
     constructor(pool) {
         this.pool = pool;
-        this.name = 'Cumulative Energy Use';
+        this.name = 'Cumulative Energy Use (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kWh;
