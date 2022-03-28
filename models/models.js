@@ -46,22 +46,27 @@ class Models {
     }
 
     LoadModels() {
-        this.Register(sealingEnergyModelv_1_0_1);
-        this.Register(renewableEnergyModel);
-        this.Register(cumulativeEnergyModel_v_1_0_1);
-        this.Register(totalEnergyModelv_1_0_1);
-        this.Register(storageEnergyModelv_1_0_1);
-        this.Register(capacityModel);
+        this.Register(totalEnergyModelv_1_0_1);       //Energy consumption rate (v1.0.1)
+        this.Register(sealingEnergyModelv_1_0_1);     //Energy used to seal data (v1.0.1)
+        this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
+        this.Register(cumulativeEnergyModel_v_1_0_1); //Cumulative Energy Use (v1.0.1)
+        this.Register(renewableEnergyModel);          //Cumulative renewable energy purchases
+        this.Register(sealedModel);                   //Data storage capacity added per day
+        this.Register(capacityModel);                 //Data storage capacity
+        
         // this.Register(fractionModel);
-        this.Register(sealedModel);
         // this.Register(sealingEnergyModel);
         // this.Register(storageEnergyModel);
         // this.Register(totalEnergyModel);
+
+        //Dev Models:
+        /*
         this.Register(sealingEnergySumModel);
         this.Register(totalSealedModel);
         this.Register(totalStoredOverTimeModel);
         this.Register(totalSealedStoredOverTimeModel);
         this.Register(totalSealingEnergyModel);
+        */
     }
 
     Register(model) {
