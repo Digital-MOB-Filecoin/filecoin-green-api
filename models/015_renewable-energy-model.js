@@ -38,7 +38,7 @@ class RenewableEnergyModel {
                     SELECT
                         ${formula}                             AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_renewable_energy_view_v2
+                        FROM fil_renewable_energy_view_v3
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp, date, energywh
                         ORDER BY timestamp
@@ -62,7 +62,7 @@ class RenewableEnergyModel {
                     SELECT
                         ${formula}                   AS value,
                         date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_renewable_energy_view_v2
+                    FROM fil_renewable_energy_view_v3
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner,timestamp,energywh, date
                     ORDER BY timestamp
