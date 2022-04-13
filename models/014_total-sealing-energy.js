@@ -11,6 +11,7 @@ let sealing_kWh_per_GiB_block_max = '0.0601295421';
 
 class TotalSealingEnergyModel {
     constructor(pool) {
+        this.code_name = 'TotalSealingEnergyModel';
         this.pool = pool;
         this.name = 'Cumulative amount of energy used to seal files in kWh (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
@@ -21,6 +22,10 @@ class TotalSealingEnergyModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -96,6 +101,7 @@ class TotalSealingEnergyModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

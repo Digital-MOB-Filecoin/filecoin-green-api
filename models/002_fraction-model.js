@@ -6,6 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 class FractionModel {
     constructor(pool) {
+        this.code_name = 'FractionModel';
         this.pool = pool;
         this.name = 'Fraction Used';
         this.category = CATEGORY.CAPACITY;
@@ -16,6 +17,10 @@ class FractionModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -91,6 +96,7 @@ class FractionModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

@@ -6,6 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 class TotalSealedModel {
     constructor(pool) {
+        this.code_name = 'TotalSealedModel';
         this.pool = pool;
         this.name = 'Total amount of data sealed in GiB';
         this.category = CATEGORY.CAPACITY; // see type.js
@@ -16,6 +17,10 @@ class TotalSealedModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -91,6 +96,7 @@ class TotalSealedModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

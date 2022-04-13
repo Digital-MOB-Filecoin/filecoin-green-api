@@ -8,6 +8,7 @@ const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
 
 class TotalStoredOverTimeModel {
     constructor(pool) {
+        this.code_name = 'TotalStoredOverTimeModel';
         this.pool = pool;
         this.name = 'Data stored over time in GiB*hours';
         this.category = CATEGORY.CAPACITY; // see type.js
@@ -18,6 +19,10 @@ class TotalStoredOverTimeModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -93,6 +98,7 @@ class TotalStoredOverTimeModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

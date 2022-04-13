@@ -6,6 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 class StorageEnergyModelv_1_0_1 {
     constructor(pool) {
+        this.code_name = 'StorageEnergyModelv_1_0_1';
         this.pool = pool;
         this.name = 'Energy used to store data (v1.0.1)';
         this.category = CATEGORY.ENERGY; // see type.js
@@ -16,6 +17,10 @@ class StorageEnergyModelv_1_0_1 {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -120,6 +125,7 @@ class StorageEnergyModelv_1_0_1 {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

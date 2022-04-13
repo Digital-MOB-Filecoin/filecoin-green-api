@@ -6,6 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 class RenewableEnergyModel {
     constructor(pool) {
+        this.code_name = 'RenewableEnergyModel';
         this.pool = pool;
         this.name = 'Cumulative renewable energy purchases ';
         this.category = CATEGORY.ENERGY;
@@ -16,6 +17,10 @@ class RenewableEnergyModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -91,6 +96,7 @@ class RenewableEnergyModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

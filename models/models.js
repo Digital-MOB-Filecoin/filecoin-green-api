@@ -73,44 +73,86 @@ class Models {
         let id = this.models.length;
         if (ValidModel(model)) {
             this.models.push(model)
-            this.models_list.push({id: id, name: model.Name(), category: model.Category(), details: model.Details()});
+            this.models_list.push({id: id, name: model.Name(), code_name: model.CodeName(), category: model.Category(), details: model.Details()});
 
-            INFO(`[Models] register model ${model.Name()} , id : ${id}`);
+            INFO(`[Models] register model ${model.Name()} , id : ${id} code_name : ${model.CodeName()}`);
         } else {
             ERROR(`Unable to register model : ${model?.Name()} validation failed`);
         }
     }
 
-    async Query(id, query) {
+    async Query(id, code_name, query) {
         let result = undefined;
 
-        if (id >=0 && id < this.models.length) {
-            let start = Start(query);
-            let end = End(query);
-            let filter = Filter(query);
-            let miner = Miner(query);
+        let start = Start(query);
+        let end = End(query);
+        let filter = Filter(query);
+        let miner = Miner(query);
 
-            result = await this.models[id].Query(id, start, end, filter, miner);
-        }  else {
-            ERROR(`Unable to query model with id: ${id}`);
+        if (id) {
+            if (id >= 0 && id < this.models.length) {
+                result = await this.models[id].Query(id, start, end, filter, miner);
+            } else {
+                ERROR(`Unable to query model with id: ${id}`);
+            }
+        } else if (code_name) {
+            let found = false;
+            id = 0;
+            for (const model of this.models) {
+                if (model.CodeName() === code_name) {
+                    result = await model.Query(id.toString(), start, end, filter, miner);
+                    found = true;
+                }
+
+                if (found) {
+                    break;
+                }
+
+                id++;
+            }
+
+            if (!found) {
+                ERROR(`Query model with code_name: ${code_name} not found`);
+            }
         }
 
         return result;
     }
 
-    async Export(id, query) {
+    async Export(id, code_name, query) {
         let result = undefined;
 
-        if (id >=0 && id < this.models.length) {
-            let start = Start(query);
-            let end = End(query);
-            let miner = Miner(query);
-            let offset = Offset(query);
-            let limit = Limit(query);
+        let start = Start(query);
+        let end = End(query);
+        let miner = Miner(query);
+        let offset = Offset(query);
+        let limit = Limit(query);
 
-            result = await this.models[id].Export(id, start, end, miner, offset, limit);
-        }  else {
-            ERROR(`Unable to export model with id: ${id}`);
+        if (id) {
+            if (id >= 0 && id < this.models.length) {
+                result = await this.models[id].Export(id.toString(), start, end, miner, offset, limit);
+            } else {
+                ERROR(`Unable to export model with id: ${id}`);
+            }
+        } else if (code_name) {
+            let found = false;
+            id = 0;
+            for (const model of this.models) {
+                if (model.CodeName() === code_name) {
+                    result = await model.Export(id, start, end, miner, offset, limit);
+                    found = true;
+                }
+
+                if (found) {
+                    break;
+                }
+
+                id++;
+            }
+
+            if (!found) {
+                ERROR(`Export model with code_name: ${code_name} not found`);
+            }
         }
 
         return result;

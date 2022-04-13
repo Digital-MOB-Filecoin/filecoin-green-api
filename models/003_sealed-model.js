@@ -6,6 +6,7 @@ const { add_time_interval, get_epoch } = require('./utils')
 
 class SealedModel {
     constructor(pool) {
+        this.code_name = 'SealedModel';
         this.pool = pool;
         this.name = 'Data storage capacity added per day';
         this.category = CATEGORY.CAPACITY;
@@ -16,6 +17,10 @@ class SealedModel {
 
     Name() {
         return this.name;
+    }
+
+    CodeName() {
+        return this.code_name;
     }
 
     Category() {
@@ -94,6 +99,7 @@ class SealedModel {
 
         let result = {
             id : id,
+            code_name: this.code_name,
             name : this.name,
             category : this.category,
             x : this.x,

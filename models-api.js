@@ -32,15 +32,16 @@ const List = async function (req, res, next) {
 // GET
 const Model = async function (req, res, next) {
     let id = req.query?.id;
+    let code_name = req.query?.code_name;
 
-    if (!id) {
-        ERROR(`GET[/models/model] Failed to get model, no id param provided`);
-        error_response(402, 'Failed to get model, no id param provided', res);
+    if (!id && !code_name) {
+        ERROR(`GET[/models/model] Failed to get model, no id or code_name param provided`);
+        error_response(402, 'Failed to get model, no id or code_name param provided', res);
         return;
     }
 
     try {
-        var result = await models.Query(id, req.query)
+        var result = await models.Query(id, code_name, req.query)
         res.json(result);
 
     } catch (e) {
@@ -52,15 +53,16 @@ const Model = async function (req, res, next) {
 // GET
 const Export = async function (req, res, next) {
     let id = req.query?.id;
+    let code_name = req.query?.code_name;
 
-    if (!id) {
-        ERROR(`GET[/models/export] Failed to export model, no id param provided`);
-        error_response(402, 'Failed to export model, no id param provided', res);
+    if (!id && !code_name) {
+        ERROR(`GET[/models/export] Failed to export model, no id or code_name param provided`);
+        error_response(402, 'Failed to export model, no id or code_name param provided', res);
         return;
     }
 
     try {
-        var result = await models.Export(id, req.query)
+        var result = await models.Export(id, code_name, req.query)
         res.json(result);
 
     } catch (e) {
