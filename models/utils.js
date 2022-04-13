@@ -113,7 +113,7 @@ function add_time_interval(start, end, filter, rows) {
 }
 
 function ValidModel(obj) {
-    return implementsMethods(obj, 'Name', 'Category','Query', 'Export', 'Details');
+    return implementsMethods(obj, 'Name', 'CodeName', 'Category','Query', 'Export', 'Details');
 }
 
 function Start(query) {
@@ -150,7 +150,9 @@ function Limit(query) {
     let limit = query?.limit;
     
     if (!limit) {
-        limit = config.filgreen.limit;;
+        limit = config.filgreen.limit;
+    } else if (limit > config.filgreen.max_limit) {
+        limit = config.filgreen.max_limit;
     }
 
     return limit;
