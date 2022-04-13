@@ -20,6 +20,7 @@ const { TotalSealedStoredOverTimeModel } = require('./013_total-sealed_plus_stor
 const { TotalSealingEnergyModel } = require('./014_total-sealing-energy');
 const { RenewableEnergyModel } = require('./015_renewable-energy-model');
 const { CumulativeEnergyModel_v_1_0_1 } = require('./016_cumulative-energy-use-model');
+const { RenewableEnergyRatioModel } = require('./017_renewable-energy-ratio-model.js');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -37,6 +38,7 @@ let totalSealedStoredOverTimeModel = new TotalSealedStoredOverTimeModel(pool);
 let totalSealingEnergyModel = new TotalSealingEnergyModel(pool);
 let renewableEnergyModel = new RenewableEnergyModel(pool);
 let cumulativeEnergyModel_v_1_0_1 = new CumulativeEnergyModel_v_1_0_1(pool);
+let renewableEnergyRatioModel = new RenewableEnergyRatioModel(pool);
 
 
 class Models {
@@ -46,6 +48,7 @@ class Models {
     }
 
     LoadModels() {
+        this.Register(renewableEnergyRatioModel);     //Renewable energy ratio
         this.Register(totalEnergyModelv_1_0_1);       //Energy consumption rate (v1.0.1)
         this.Register(sealingEnergyModelv_1_0_1);     //Energy used to seal data (v1.0.1)
         this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
