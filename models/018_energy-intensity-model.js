@@ -4,6 +4,9 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+const EiB_to_GiB = 1073741824;
+const MW_per_EiB_coeff = EiB_to_GiB / 1000;
+
 class EnergyIntensityModel {
     constructor(pool) {
         this.code_name = 'EnergyIntensityModel';
@@ -70,7 +73,7 @@ class EnergyIntensityModel {
                   full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                   SELECT
-                  COALESCE((((storage_power_kW + sealing_power_kW) * ${pue}) / NULLIF(capacity,0)),0) as value,
+                  COALESCE((((storage_power_kW + sealing_power_kW) * ${pue}) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} as value,
                     storage_timestamp AS start_date
                   FROM total_powers
                 `);
@@ -117,7 +120,7 @@ class EnergyIntensityModel {
                  full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                  SELECT
-                 COALESCE((((storage_power_kW + sealing_power_kW) * ${pue}) / NULLIF(capacity,0)),0) as value,
+                 COALESCE((((storage_power_kW + sealing_power_kW) * ${pue}) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} as value,
                    storage_timestamp AS start_date
                  FROM total_powers
              `);
