@@ -10,7 +10,8 @@ var DATA_TYPE  = {
     GiB     : 'GiB',
     kWh     : 'kWh',
     kW     : 'kW',
-    PERCENTAGE : 'percentage'
+    PERCENTAGE : 'percentage',
+    MW_per_EiB : 'MW_per_EiB'
 };
 
 var COLOR = {

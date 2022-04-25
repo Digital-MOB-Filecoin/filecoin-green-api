@@ -14,7 +14,7 @@ class EnergyIntensityModel {
         this.name = 'Energy Intensity';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
-        this.y = DATA_TYPE.kW;
+        this.y = DATA_TYPE.MW_per_EiB;
         this.version = VERSION.v0;
     }
 
