@@ -4,6 +4,12 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+const consts = {
+    sealing_kWh_GiB: 0.0601295421,
+    storage_kW_GiB: 0.0000086973,
+    pue: 1.93
+  }
+
 class RenewableEnergyRatioModel {
     constructor(pool) {
         this.code_name = 'RenewableEnergyRatioModel';
@@ -35,19 +41,41 @@ class RenewableEnergyRatioModel {
         var result;
 
         try {
-                result = await this.pool.query(`
+            result = await this.pool.query(`
+            with energy_use as(
+              SELECT
+                  SUM((ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue}) OVER(ORDER BY date) AS energy_use_upper_bound,
+                  date_trunc('${filter}', date::date) AS energy_use_timestamp,
+                  date_trunc('${filter}', date::date) AS timestamp
+                  FROM fil_network_view_days
+                  WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                  GROUP BY timestamp, date, total_per_day
+                  ORDER BY timestamp
+            ),
+
+            energy as(
                 SELECT
-                value,
-                timestamp AS start_date
-                FROM (
-                    SELECT
-                            date_trunc('${filter}', date::date) AS timestamp,
-                            ${formula}                             AS value
-                        FROM fil_renewable_energy_ratio_network_view
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp,date,ratio
-                        ORDER BY timestamp
-                ) q;`);
+                SUM(energyWh / 1000) OVER(ORDER BY date) AS energy,
+                date_trunc('${filter}', date::date) AS energy_timestamp,
+                date_trunc('${filter}', date::date) AS timestamp
+                FROM fil_renewable_energy_view_v3
+                WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                GROUP BY timestamp, date, energyWh
+                ORDER BY timestamp
+            ),
+
+            total as (select energy_use.energy_use_upper_bound, 
+                energy_use.energy_use_timestamp, 
+                energy.energy_timestamp, 
+                energy.energy
+              from energy_use
+            full outer join energy on energy_use.energy_use_timestamp = energy.energy_timestamp)
+
+            SELECT
+            COALESCE( ((energy) / NULLIF(energy_use_upper_bound, 0)), 0) as value,
+            energy_use_timestamp AS start_date
+            FROM total
+          `);
         } catch (e) {
             ERROR(`[RenewableEnergyRatioModel] NetworkQuery error:${e}`);
         }
