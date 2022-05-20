@@ -1,0 +1,170 @@
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: "Filecoin GREEN"
+schemes:
+- "https"
+- "http"
+paths:
+  /models/list:
+   get:
+      summary: "Get the list of models"
+      operationId: "modelsList"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                    example: "Model name"
+                  code_name:
+                    type: string
+                    example: "Model code_name"
+                  category:
+                    type: string
+                    example: "Model category: capacity, energy, emissions"
+                  details:
+                    type: string
+                    example: "Model description"
+  /models/model:
+   get:
+      summary: "Get the model data"
+      operationId: "modelsModel"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "code_name"
+        in: "query"
+        description: "Model code name"
+        required: true
+        type: string
+        enum:
+          - "EnergyIntensityModel"
+          - "RenewableEnergyRatioModel"
+          - "TotalEnergyModelv_1_0_1"
+          - "SealingEnergyModelv_1_0_1"
+          - "StorageEnergyModelv_1_0_1"
+          - "CumulativeEnergyModel_v_1_0_1"
+          - "RenewableEnergyModel"
+          - "SealedModel"
+          - "CapacityModel"
+        default: "EnergyIntensityModel"
+      - name: "start"
+        in: "query"
+        description: "Start date"
+        required: false
+        type: string
+        default: "2020-08-25"
+      - name: "end"
+        in: "query"
+        description: "End date"
+        required: false
+        type: string
+        default: "2021-08-25"
+      - name: "filter"
+        in: "query"
+        description: "Filter"
+        required: false
+        type: "string"
+        enum:
+          - "day"
+          - "week"
+          - "month"
+        default: "day"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 0
+                  code_name:
+                    type: string
+                    example: "Model code_name"
+                  name:
+                    type: string
+                    example: "Model name"
+                  category:
+                    type: string
+                    example: "Model category: capacity, energy, emissions"
+                  x:
+                    type: string
+                    example: "time"
+                  y:
+                    type: string
+                    example: "MW_per_EiB"
+                  version:
+                    type: integer
+                    example: 0
+                  filter:
+                    type: string
+                    example: "day"
+                  data:
+                    type: string
+                    example: "Model data"
+  /models/export:
+   get:
+      summary: "Get the model export data"
+      operationId: "modelsExport"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "code_name"
+        in: "query"
+        description: "Model code name"
+        required: true
+        type: string
+        enum:
+          - "EnergyIntensityModel"
+          - "RenewableEnergyRatioModel"
+          - "TotalEnergyModelv_1_0_1"
+          - "SealingEnergyModelv_1_0_1"
+          - "StorageEnergyModelv_1_0_1"
+          - "CumulativeEnergyModel_v_1_0_1"
+          - "RenewableEnergyModel"
+          - "SealedModel"
+          - "CapacityModel"
+        default: "EnergyIntensityModel"
+      - name: "start"
+        in: "query"
+        description: "Start date"
+        required: false
+        type: string
+        default: "2020-08-25"
+      - name: "end"
+        in: "query"
+        description: "End date"
+        required: false
+        type: string
+        default: "2021-08-25"
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        default: 10000
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
+                    example: "array"      
+                    

@@ -6,12 +6,18 @@ const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
 const { head, block, miners, filchain } = require('./filchain-api');
 const { List, Model, Export } = require('./models-api');
 
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yaml');
+const swaggerUi = require('swagger-ui-express');
+
 var express = require("express");
 var cors = require('cors');
 var app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const pool = new Pool(config.database);
 
