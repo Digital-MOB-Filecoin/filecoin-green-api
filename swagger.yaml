@@ -4,7 +4,6 @@ info:
   title: "Filecoin GREEN"
 schemes:
 - "https"
-- "http"
 paths:
   /models/list:
    get:
