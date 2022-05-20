@@ -44,28 +44,27 @@ paths:
         required: true
         type: string
         enum:
-          - "EnergyIntensityModel"
-          - "RenewableEnergyRatioModel"
           - "TotalEnergyModelv_1_0_1"
           - "SealingEnergyModelv_1_0_1"
           - "StorageEnergyModelv_1_0_1"
           - "CumulativeEnergyModel_v_1_0_1"
           - "RenewableEnergyModel"
+          - "EnergyIntensityModel"
           - "SealedModel"
           - "CapacityModel"
-        default: "EnergyIntensityModel"
+        default: "CapacityModel"
       - name: "start"
         in: "query"
         description: "Start date"
         required: false
         type: string
-        default: "2020-08-25"
+        default: "2022-01-01"
       - name: "end"
         in: "query"
         description: "End date"
         required: false
         type: string
-        default: "2021-08-25"
+        default: "2022-05-15"
       - name: "filter"
         in: "query"
         description: "Filter"
@@ -122,28 +121,27 @@ paths:
         required: true
         type: string
         enum:
-          - "EnergyIntensityModel"
-          - "RenewableEnergyRatioModel"
           - "TotalEnergyModelv_1_0_1"
           - "SealingEnergyModelv_1_0_1"
           - "StorageEnergyModelv_1_0_1"
           - "CumulativeEnergyModel_v_1_0_1"
           - "RenewableEnergyModel"
+          - "EnergyIntensityModel"
           - "SealedModel"
           - "CapacityModel"
-        default: "EnergyIntensityModel"
+        default: "CapacityModel"
       - name: "start"
         in: "query"
         description: "Start date"
         required: false
         type: string
-        default: "2020-08-25"
+        default: "2022-01-01"
       - name: "end"
         in: "query"
         description: "End date"
         required: false
         type: string
-        default: "2021-08-25"
+        default: "2022-05-15"
       - name : "offset"
         in: "query"
         type: integer
