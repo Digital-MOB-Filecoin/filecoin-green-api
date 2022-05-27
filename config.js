@@ -1,7 +1,7 @@
 module.exports = {
     filgreen: {
       api_port: process.env.API_PORT || 3000,
-      limit: process.env.LIMIT || 10000,
+      limit: process.env.LIMIT || 1000,
       max_limit: process.env.MAX_LIMIT || 50000,
     },
     database: {
