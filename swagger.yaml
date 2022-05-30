@@ -151,7 +151,7 @@ paths:
         in: "query"
         type: integer
         required: false
-        default: 10000
+        default: 100
       responses:
         "200":
           description: "successful"
