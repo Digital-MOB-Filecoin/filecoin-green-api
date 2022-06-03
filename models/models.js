@@ -55,7 +55,7 @@ class Models {
         this.Register(sealingEnergyModelv_1_0_1);     //Energy used to seal data (v1.0.1)
         this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
         this.Register(cumulativeEnergyModel_v_1_0_1); //Cumulative Energy Use (v1.0.1)
-        //this.Register(renewableEnergyModel);        //Cumulative renewable energy purchases
+        this.Register(renewableEnergyModel);        //Cumulative renewable energy purchases
         this.Register(energyIntensityModel);          //Energy Intensity
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity

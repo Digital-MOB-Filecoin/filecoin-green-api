@@ -36,18 +36,16 @@ class RenewableEnergyModel {
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
-                    SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_renewable_energy_view_v3
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp, date, energywh
-                        ORDER BY timestamp
-                ) q;`);
+                with data as (SELECT
+                    ${formula} AS value,
+                    date_trunc('${filter}', date::date) AS timestamp
+                    FROM fil_renewable_energy_view_v3
+                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY timestamp, date, energywh
+                    ORDER BY timestamp),
+                    datapoints as (SELECT value, timestamp AS start_date FROM data)
+                    SELECT DISTINCT start_date, value FROM datapoints;
+                    `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] NetworkQuery error:${e}`);
         }
