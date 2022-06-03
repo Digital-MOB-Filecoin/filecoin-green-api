@@ -44,7 +44,7 @@ class RenewableEnergyModel {
                     GROUP BY timestamp, date, energywh
                     ORDER BY timestamp),
                     datapoints as (SELECT value, timestamp AS start_date FROM data)
-                    SELECT DISTINCT start_date, value FROM datapoints;
+                    SELECT DISTINCT start_date, value FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] NetworkQuery error:${e}`);
