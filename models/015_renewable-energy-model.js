@@ -128,25 +128,25 @@ class RenewableEnergyModel {
                 let result;
 
                 if (miner) {
-                    fields = ['miner','energyWh','timestamp'];
+                    fields = ['miner','energykWh','timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
-                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energyWh\" \
+                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energykWh\" \
                     FROM fil_renewable_energy_view_v3 \
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                     ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['energyWh','timestamp'];
+                    fields = ['energykWh','timestamp'];
                     result = await this.pool.query(`
                     with data as (SELECT
-                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energyWh\",
+                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energykWh\",
                         date_trunc('day', date::date) AS timestamp
                         FROM fil_renewable_energy_view_v3
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp, date, energyWh
                         ORDER BY timestamp),
-                        datapoints as (SELECT \"energyWh\", timestamp FROM data)
-                        SELECT DISTINCT timestamp, \"energyWh\" FROM datapoints ORDER BY timestamp
+                        datapoints as (SELECT \"energykWh\", timestamp FROM data)
+                        SELECT DISTINCT timestamp, \"energykWh\" FROM datapoints ORDER BY timestamp
                         LIMIT ${limit} OFFSET ${offset}`);
                 }
 
