@@ -128,18 +128,26 @@ class RenewableEnergyModel {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total as \"capacity_GiB\",timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    fields = ['miner','energyWh','timestamp'];
+                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
+                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energyWh\" \
+                    FROM fil_renewable_energy_view_v3 \
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total as \"capacity_GiB\",timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    fields = ['energyWh','timestamp'];
+                    result = await this.pool.query(`
+                    with data as (SELECT
+                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energyWh\",
+                        date_trunc('day', date::date) AS timestamp
+                        FROM fil_renewable_energy_view_v3
+                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                        GROUP BY timestamp, date, energyWh
+                        ORDER BY timestamp),
+                        datapoints as (SELECT \"energyWh\", timestamp FROM data)
+                        SELECT DISTINCT timestamp, \"energyWh\" FROM datapoints ORDER BY timestamp
+                        LIMIT ${limit} OFFSET ${offset}`);
                 }
 
 
