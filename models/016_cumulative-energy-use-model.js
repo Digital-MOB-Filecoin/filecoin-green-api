@@ -151,22 +151,28 @@ class CumulativeEnergyModel_v_1_0_1 {
                 let result;
 
                 if (miner) {
-                    fields = ['epoch','miner','total_data_over_time_GiB_h','total_sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
-                                                                            total_per_epoch as \"total_sealed_GiB\", \
-                                                                            timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,miner,timestamp,total,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    fields = ['miner','energy_use_kW_lower','energy_use_kW_estimate', 'energy_use_kW_upper', 'timestamp'];
+                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue}) OVER(ORDER BY date) as \"energy_use_kW_lower\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue}) OVER(ORDER BY date) as \"energy_use_kW_estimate\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue}) OVER(ORDER BY date) as \"energy_use_kW_upper\" \
+                    FROM fil_miner_view_days_v4
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY miner,timestamp,date,total_per_day
+                    ORDER BY timestamp \
+                    LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['epoch','total_data_over_time_GiB_h','total_sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total / ${epoch_DOT} as \"total_data_over_time_GiB_h\", \
-                                                                    total_per_epoch as \"total_sealed_GiB\", \
-                                                                    timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    GROUP BY epoch,timestamp,total,total_per_epoch ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
+                    fields = ['energy_use_kW_lower','energy_use_kW_estimate','energy_use_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT date_trunc('day', date::date) AS timestamp \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue}) OVER(ORDER BY date) as \"energy_use_kW_lower\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue}) OVER(ORDER BY date) as \"energy_use_kW_estimate\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue}) OVER(ORDER BY date) as \"energy_use_kW_upper\" \
+                    FROM fil_network_view_days
+                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY timestamp,date,total_per_day
+                    ORDER BY timestamp \
+                    LIMIT ${limit} OFFSET ${offset}`);
                 }
 
 
