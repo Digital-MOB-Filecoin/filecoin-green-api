@@ -240,7 +240,7 @@ class EnergyIntensityModel {
                 let pue_max = 1.93;
 
                 if (miner) {
-                    fields = ['miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    fields = ['miner','total_energy_MW_per_EiB_lower','total_energy_MW_per_EiB_estimate','total_energy_MW_per_EiB_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT miner as sealing_miner, 
                           ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
@@ -284,7 +284,7 @@ class EnergyIntensityModel {
                     `);
 
                 } else {
-                    fields = ['total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    fields = ['total_energy_MW_per_EiB_lower','total_energy_MW_per_EiB_estimate','total_energy_MW_per_EiB_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
                           ROUND(AVG(total)) AS capacity,
