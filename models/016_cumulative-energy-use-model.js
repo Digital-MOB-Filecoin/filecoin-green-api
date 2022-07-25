@@ -193,6 +193,58 @@ class CumulativeEnergyModel_v_1_0_1 {
 
     }
 
+    async ResearchExport(id, start, end, miner, offset, limit) {
+        let data = [];
+        let fields;
+
+        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+
+        try {
+                let result;
+
+                if (miner) {
+                    fields = ['miner','energy_use_kW_lower','energy_use_kW_estimate', 'energy_use_kW_upper', 'timestamp'];
+                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue}) OVER(ORDER BY date) as \"energy_use_kW_lower\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue}) OVER(ORDER BY date) as \"energy_use_kW_estimate\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue}) OVER(ORDER BY date) as \"energy_use_kW_upper\" \
+                    FROM fil_miner_view_days_v4
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY miner,timestamp,date,total_per_day
+                    ORDER BY timestamp \
+                    LIMIT ${limit} OFFSET ${offset}`);
+
+                } else {
+                    fields = ['energy_use_kW_lower','energy_use_kW_estimate','energy_use_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT date_trunc('day', date::date) AS timestamp \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue}) OVER(ORDER BY date) as \"energy_use_kW_lower\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue}) OVER(ORDER BY date) as \"energy_use_kW_estimate\" \
+                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue}) OVER(ORDER BY date) as \"energy_use_kW_upper\" \
+                    FROM fil_network_view_days
+                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY timestamp,date,total_per_day
+                    ORDER BY timestamp \
+                    LIMIT ${limit} OFFSET ${offset}`);
+                }
+
+
+
+                if (result?.rows) {
+                    data = result?.rows;
+                }
+        } catch (e) {
+            ERROR(`[TotalSealedStoredOverTimeModel] Export error:${e}`);
+        }
+
+        let exportData = {
+            fields: fields,
+            data: data,
+        }
+
+        return exportData;
+
+    }
+
 }
 
 module.exports = {

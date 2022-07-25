@@ -168,6 +168,56 @@ class RenewableEnergyModel {
 
     }
 
+    async ResearchExport(id, start, end, miner, offset, limit) {
+        let data = [];
+        let fields;
+
+        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+
+        try {
+                let result;
+
+                if (miner) {
+                    fields = ['miner','energykWh','timestamp'];
+                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
+                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energykWh\" \
+                    FROM fil_renewable_energy_view_v3 \
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+
+                } else {
+                    fields = ['energykWh','timestamp'];
+                    result = await this.pool.query(`
+                    with data as (SELECT
+                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energykWh\",
+                        date_trunc('day', date::date) AS timestamp
+                        FROM fil_renewable_energy_view_v3
+                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                        GROUP BY timestamp, date, energyWh
+                        ORDER BY timestamp),
+                        datapoints as (SELECT \"energykWh\", timestamp FROM data)
+                        SELECT DISTINCT timestamp, \"energykWh\" FROM datapoints ORDER BY timestamp
+                        LIMIT ${limit} OFFSET ${offset}`);
+                }
+
+
+
+                if (result?.rows) {
+                    data = result?.rows;
+                }
+        } catch (e) {
+            ERROR(`[RenewableEnergyModel] Export error:${e}`);
+        }
+
+        let exportData = {
+            fields: fields,
+            data: data,
+        }
+
+        return exportData;
+
+    }
+
 }
 
 module.exports = {

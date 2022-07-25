@@ -179,6 +179,55 @@ class StorageEnergyModelv_1_0_1 {
                 let result;
 
                 if (miner) {
+                    fields = ['miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT miner, ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
+                                                                       , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
+                                                                       , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
+                                                                       , date_trunc('day', date::date) AS timestamp \
+                    FROM fil_miner_view_days_v4 \
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    GROUP BY miner, date \
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+
+                } else {
+                    fields = ['storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`SELECT ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
+                                                                , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
+                                                                , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
+                                                                , date_trunc('day', date::date) AS timestamp \
+                    FROM fil_network_view_days \
+                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    GROUP BY date \
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+                }
+
+
+                if (result?.rows) {
+                    data = result?.rows;
+                }
+        } catch (e) {
+            ERROR(`[StorageEnergyModel] Export error:${e}`);
+        }
+
+        let exportData = {
+            fields: fields,
+            data: data,
+        }
+
+        return exportData;
+
+    }
+
+    async ResearchExport(id, start, end, miner, offset, limit) {
+        let data = [];
+        let fields;
+
+        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+
+        try {
+                let result;
+
+                if (miner) {
                     fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`SELECT epoch, miner, total*0.0000009688 as \"storage_energy_kW_lower\" \
                                                                        , total*0.0000032212 as \"storage_energy_kW_estimate\" \

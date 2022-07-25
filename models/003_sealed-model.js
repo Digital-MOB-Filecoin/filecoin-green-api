@@ -133,6 +133,54 @@ class SealedModel {
                 let result;
 
                 if (miner) {
+                    fields = ['miner','sealed_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT miner,\
+                    ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
+                    date_trunc('day', date::date) AS timestamp \
+                    FROM fil_miner_view_days_v4 \
+                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    GROUP BY miner, date 
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+
+                } else {
+                    fields = ['sealed_GiB','timestamp'];
+                    result = await this.pool.query(`SELECT \
+                    ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
+                    date_trunc('day', date::date) AS timestamp \
+                    FROM fil_network_view_days \
+                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
+                    GROUP BY date 
+                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+                }
+
+
+
+                if (result?.rows) {
+                    data = result?.rows;
+                }
+        } catch (e) {
+            ERROR(`[SealedModel] Export error:${e}`);
+        }
+
+        let exportData = {
+            fields: fields,
+            data: data,
+        }
+
+        return exportData;
+
+    }
+
+    async ResearchExport(id, start, end, miner, offset, limit) {
+        let data = [];
+        let fields;
+
+        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+
+        try {
+                let result;
+
+                if (miner) {
                     fields = ['epoch','miner','sealed_this_epoch_GiB','timestamp'];
                     result = await this.pool.query(`SELECT epoch,miner,total_per_epoch as \"sealed_this_epoch_GiB\",timestamp \
                     FROM fil_miner_view_epochs \

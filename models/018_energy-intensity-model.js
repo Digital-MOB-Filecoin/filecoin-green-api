@@ -240,6 +240,124 @@ class EnergyIntensityModel {
                 let pue_max = 1.93;
 
                 if (miner) {
+                    fields = ['miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`with sealing as(
+                      SELECT miner as sealing_miner, 
+                          ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
+                          date_trunc('day', date::date) AS timestamp, 
+                          date_trunc('day', date::date) AS sealing_timestamp 
+                          FROM fil_miner_view_days_v4
+                          WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                          GROUP BY miner, date
+                          ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
+                    ),
+
+                    storage as(
+                      SELECT miner as storage_miner, 
+                          ROUND(AVG(total)) AS stored_GiB, 
+                          date_trunc('day', date::date) AS timestamp, 
+                          date_trunc('day', date::date) AS storage_timestamp
+                          FROM fil_miner_view_days_v4
+                          WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                          GROUP BY miner, date
+                          ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
+                    ),
+
+                    total_metrics as (
+                        select storage.stored_GiB, 
+                        storage.storage_timestamp, 
+                        storage.storage_miner, 
+                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, 
+                        sealing.sealing_timestamp, 
+                        sealing.sealing_miner from storage
+                    full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
+
+                    SELECT
+                      storage_miner AS miner,
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
+                      storage_timestamp AS timestamp
+                    FROM total_metrics
+                    `);
+
+                } else {
+                    fields = ['total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
+                    result = await this.pool.query(`with sealing as(
+                      SELECT ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
+                          date_trunc('day', date::date) AS timestamp, 
+                          date_trunc('day', date::date) AS sealing_timestamp 
+                          FROM fil_network_view_days
+                          WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                          GROUP BY date
+                          ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
+                    ),
+
+                    storage as(
+                      SELECT ROUND(AVG(total)) AS stored_GiB, 
+                          date_trunc('day', date::date) AS timestamp, 
+                          date_trunc('day', date::date) AS storage_timestamp
+                          FROM fil_network_view_days
+                          WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                          GROUP BY date
+                          ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
+                    ),
+
+                    total_metrics as (
+                        select storage.stored_GiB, 
+                        storage.storage_timestamp, 
+                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, 
+                        sealing.sealing_timestamp from storage
+                    full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
+
+                    SELECT
+                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
+                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
+                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
+                      storage_timestamp AS timestamp
+                    FROM total_metrics
+                    `);
+                }
+
+
+                if (result?.rows) {
+                    data = result?.rows;
+                }
+        } catch (e) {
+            ERROR(`[EnergyIntensityModel] Export error:${e}`);
+        }
+
+        let exportData = {
+            fields: fields,
+            data: data,
+        }
+
+        return exportData;
+
+    }
+
+    async ResearchExport(id, start, end, miner, offset, limit) {
+        let data = [];
+        let fields;
+
+        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+
+        try {
+                let result;
+
+                let sealing_kW_per_GiB_block_min = '.77419505';
+                let sealing_kW_per_GiB_block_est = '4.40199788';
+                let sealing_kW_per_GiB_block_max = '7.21554506';
+
+                let storage_kW_per_GiB_min = '0.0000009688';
+                let storage_kW_per_GiB_est = '0.0000032212';
+                let storage_kW_per_GiB_max = '0.0000086973';
+
+                let pue_min = 1.18;
+                let pue_est = 1.57;
+                let pue_max = 1.93;
+
+                if (miner) {
                     fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT epoch as sealing_epoch, miner as sealing_miner, total_per_epoch AS sealing_added_GiB, timestamp as sealing_timestamp
@@ -313,6 +431,7 @@ class EnergyIntensityModel {
         return exportData;
 
     }
+
 
 }
 
