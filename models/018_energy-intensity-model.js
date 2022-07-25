@@ -227,9 +227,9 @@ class EnergyIntensityModel {
         try {
                 let result;
 
-                let sealing_kW_per_GiB_block_min = '.77419505';
-                let sealing_kW_per_GiB_block_est = '4.40199788';
-                let sealing_kW_per_GiB_block_max = '7.21554506';
+                let sealing_kW_per_GiB_block_min = '0.00026882';
+                let sealing_kW_per_GiB_block_est = '0.00152847';
+                let sealing_kW_per_GiB_block_max = '0.00250540';
 
                 let storage_kW_per_GiB_min = '0.0000009688';
                 let storage_kW_per_GiB_est = '0.0000032212';
