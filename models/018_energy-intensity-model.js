@@ -244,6 +244,7 @@ class EnergyIntensityModel {
                     result = await this.pool.query(`with sealing as(
                       SELECT miner as sealing_miner, 
                           ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
+                          ROUND(AVG(total)) AS capacity,
                           date_trunc('day', date::date) AS timestamp, 
                           date_trunc('day', date::date) AS sealing_timestamp 
                           FROM fil_miner_view_days_v4
@@ -267,16 +268,17 @@ class EnergyIntensityModel {
                         select storage.stored_GiB, 
                         storage.storage_timestamp, 
                         storage.storage_miner, 
-                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, 
+                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB,
+                        coalesce(sealing.capacity,0) as capacity, 
                         sealing.sealing_timestamp, 
                         sealing.sealing_miner from storage
                     full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                     SELECT
                       storage_miner AS miner,
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
+                      COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_lower\",
+                      COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_estimate\",
+                      COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_upper\",
                       storage_timestamp AS timestamp
                     FROM total_metrics
                     `);
@@ -285,6 +287,7 @@ class EnergyIntensityModel {
                     fields = ['total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as(
                       SELECT ROUND(AVG(total_per_day)) AS sealing_added_GiB, 
+                          ROUND(AVG(total)) AS capacity,
                           date_trunc('day', date::date) AS timestamp, 
                           date_trunc('day', date::date) AS sealing_timestamp 
                           FROM fil_network_view_days
@@ -306,14 +309,15 @@ class EnergyIntensityModel {
                     total_metrics as (
                         select storage.stored_GiB, 
                         storage.storage_timestamp, 
-                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB, 
+                        coalesce(sealing.sealing_added_GiB,0) as sealing_added_GiB,
+                        coalesce(sealing.capacity,0) as capacity, 
                         sealing.sealing_timestamp from storage
                     full outer join sealing on storage.storage_timestamp = sealing.sealing_timestamp)
 
                     SELECT
-                      (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} AS \"total_energy_kW_lower\",
-                      (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} AS \"total_energy_kW_estimate\",
-                      (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} AS \"total_energy_kW_upper\",
+                    COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_lower\",
+                    COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_estimate\",
+                    COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS \"total_energy_kW_upper\",
                       storage_timestamp AS timestamp
                     FROM total_metrics
                     `);
