@@ -165,5 +165,63 @@ paths:
                     example: "array"
                   data:
                     type: string
+                    example: "array"
+  /models/research_export:
+   get:
+      summary: "Get the model export data at epoch level"
+      operationId: "modelsResearchExport"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "code_name"
+        in: "query"
+        description: "Model code name"
+        required: true
+        type: string
+        enum:
+          - "TotalEnergyModelv_1_0_1"
+          - "SealingEnergyModelv_1_0_1"
+          - "StorageEnergyModelv_1_0_1"
+          - "CumulativeEnergyModel_v_1_0_1"
+          - "RenewableEnergyModel"
+          - "EnergyIntensityModel"
+          - "SealedModel"
+          - "CapacityModel"
+        default: "CapacityModel"
+      - name: "start"
+        in: "query"
+        description: "Start date"
+        required: false
+        type: string
+        default: "2022-01-01"
+      - name: "end"
+        in: "query"
+        description: "End date"
+        required: false
+        type: string
+        default: "2022-05-15"
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 1000
+        default: 100
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
                     example: "array"      
                     
