@@ -133,10 +133,11 @@ class Models {
         let miner = Miner(query);
         let offset = Offset(query);
         let limit = Limit(query);
+        let filter = Filter(query);
 
         if (id) {
             if (id >= 0 && id < this.models.length) {
-                result = await this.models[id].Export(id.toString(), start, end, miner, offset, limit);
+                result = await this.models[id].Export(id.toString(), start, end, miner, offset, limit, filter);
             } else {
                 ERROR(`Unable to export model with id: ${id}`);
             }
@@ -158,6 +159,45 @@ class Models {
 
             if (!found) {
                 ERROR(`Export model with code_name: ${code_name} not found`);
+            }
+        }
+
+        return result;
+    }
+
+    async ResearchExport(id, code_name, query) {
+        let result = undefined;
+
+        let start = Start(query);
+        let end = End(query);
+        let miner = Miner(query);
+        let offset = Offset(query);
+        let limit = Limit(query);
+
+        if (id) {
+            if (id >= 0 && id < this.models.length) {
+                result = await this.models[id].ResearchExport(id.toString(), start, end, miner, offset, limit);
+            } else {
+                ERROR(`Unable to export model with id: ${id}`);
+            }
+        } else if (code_name) {
+            let found = false;
+            id = 0;
+            for (const model of this.models) {
+                if (model.CodeName() === code_name) {
+                    result = await model.ResearchExport(id, start, end, miner, offset, limit);
+                    found = true;
+                }
+
+                if (found) {
+                    break;
+                }
+
+                id++;
+            }
+
+            if (!found) {
+                ERROR(`ResearchExport model with code_name: ${code_name} not found`);
             }
         }
 

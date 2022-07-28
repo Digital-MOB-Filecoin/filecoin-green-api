@@ -118,7 +118,7 @@ class RenewableEnergyModel {
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit) {
+    async Export(id, start, end, miner, offset, limit, filter) {
         let data = [];
         let fields;
 
@@ -129,7 +129,7 @@ class RenewableEnergyModel {
 
                 if (miner) {
                     fields = ['miner','energykWh','timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
+                    result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
                     , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energykWh\" \
                     FROM fil_renewable_energy_view_v3 \
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
@@ -140,7 +140,7 @@ class RenewableEnergyModel {
                     result = await this.pool.query(`
                     with data as (SELECT
                         SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energykWh\",
-                        date_trunc('day', date::date) AS timestamp
+                        date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_renewable_energy_view_v3
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY timestamp, date, energyWh

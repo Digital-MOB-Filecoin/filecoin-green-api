@@ -123,7 +123,7 @@ class SealedModel {
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit) {
+    async Export(id, start, end, miner, offset, limit, filter) {
         let data = [];
         let fields;
 
@@ -136,7 +136,7 @@ class SealedModel {
                     fields = ['miner','sealed_GiB','timestamp'];
                     result = await this.pool.query(`SELECT miner,\
                     ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
-                    date_trunc('day', date::date) AS timestamp \
+                    date_trunc('${filter}', date::date) AS timestamp \
                     FROM fil_miner_view_days_v4 \
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                     GROUP BY miner, date 
@@ -146,7 +146,7 @@ class SealedModel {
                     fields = ['sealed_GiB','timestamp'];
                     result = await this.pool.query(`SELECT \
                     ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
-                    date_trunc('day', date::date) AS timestamp \
+                    date_trunc('${filter}', date::date) AS timestamp \
                     FROM fil_network_view_days \
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                     GROUP BY date 

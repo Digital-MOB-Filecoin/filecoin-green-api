@@ -71,8 +71,31 @@ const Export = async function (req, res, next) {
     }
 };
 
+// GET
+const ResearchExport = async function (req, res, next) {
+    let id = req.query?.id;
+    let code_name = req.query?.code_name;
+
+    if (!id && !code_name) {
+        ERROR(`GET[/models/research_export] Failed to export model, no id or code_name param provided`);
+        error_response(402, 'Failed to export model, no id or code_name param provided', res);
+        return;
+    }
+
+    try {
+        var result = await models.ResearchExport(id, code_name, req.query)
+        res.json(result);
+
+    } catch (e) {
+        ERROR(`GET[/models/research_export] error: ${e}`);
+        error_response(401, 'Failed to export model', res);
+    }
+};
+
+
 module.exports = {
     List,
     Model,
     Export,
+    ResearchExport
 }

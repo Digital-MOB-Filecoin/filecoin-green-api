@@ -207,7 +207,7 @@ class TotalEnergyModelv_1_0_1 {
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit) {
+    async Export(id, start, end, miner, offset, limit, filter) {
         let data = [];
         let fields;
 
@@ -232,8 +232,8 @@ class TotalEnergyModelv_1_0_1 {
                     fields = ['miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as( \
                       SELECT miner as sealing_miner, \
-                          date_trunc('day', date::date) AS timestamp, \
-                          date_trunc('day', date::date) AS sealing_timestamp, \
+                          date_trunc('${filter}', date::date) AS timestamp, \
+                          date_trunc('${filter}', date::date) AS sealing_timestamp, \
                           ROUND(AVG(total_per_day)) AS sealing_added_GiB \
                           FROM fil_miner_view_days_v4 \
                           WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
@@ -242,8 +242,8 @@ class TotalEnergyModelv_1_0_1 {
                     ), \
                     storage as( \
                       SELECT miner as storage_miner, \
-                          date_trunc('day', date::date) AS timestamp, \
-                          date_trunc('day', date::date) AS storage_timestamp, \
+                          date_trunc('${filter}', date::date) AS timestamp, \
+                          date_trunc('${filter}', date::date) AS storage_timestamp, \
                           ROUND(AVG(total)) AS stored_GiB \
                           FROM fil_miner_view_days_v4 \
                           WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
@@ -271,8 +271,8 @@ class TotalEnergyModelv_1_0_1 {
                     fields = ['total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];
                     result = await this.pool.query(`with sealing as( \
                       SELECT ROUND(AVG(total_per_day)) AS sealing_added_GiB, \ 
-                          date_trunc('day', date::date) AS timestamp, \
-                          date_trunc('day', date::date) AS sealing_timestamp \
+                          date_trunc('${filter}', date::date) AS timestamp, \
+                          date_trunc('${filter}', date::date) AS sealing_timestamp \
                           FROM fil_network_view_days \
                           WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                           GROUP BY timestamp \
@@ -280,8 +280,8 @@ class TotalEnergyModelv_1_0_1 {
                     ), \
                     storage as( \
                       SELECT ROUND(AVG(total)) AS stored_GiB, \
-                          date_trunc('day', date::date) AS timestamp, \
-                          date_trunc('day', date::date) AS storage_timestamp \
+                          date_trunc('${filter}', date::date) AS timestamp, \
+                          date_trunc('${filter}', date::date) AS storage_timestamp \
                           FROM fil_network_view_days \
                           WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                           GROUP BY timestamp \

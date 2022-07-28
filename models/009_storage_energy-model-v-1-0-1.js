@@ -169,7 +169,7 @@ class StorageEnergyModelv_1_0_1 {
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit) {
+    async Export(id, start, end, miner, offset, limit, filter) {
         let data = [];
         let fields;
 
@@ -183,7 +183,7 @@ class StorageEnergyModelv_1_0_1 {
                     result = await this.pool.query(`SELECT miner, ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
                                                                        , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
                                                                        , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                       , date_trunc('day', date::date) AS timestamp \
+                                                                       , date_trunc('${filter}', date::date) AS timestamp \
                     FROM fil_miner_view_days_v4 \
                     WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                     GROUP BY miner, date \
@@ -194,7 +194,7 @@ class StorageEnergyModelv_1_0_1 {
                     result = await this.pool.query(`SELECT ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
                                                                 , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
                                                                 , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                , date_trunc('day', date::date) AS timestamp \
+                                                                , date_trunc('${filter}', date::date) AS timestamp \
                     FROM fil_network_view_days \
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
                     GROUP BY date \
