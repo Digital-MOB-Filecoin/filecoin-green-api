@@ -249,7 +249,7 @@ class EnergyIntensityModel {
                           date_trunc('${filter}', date::date) AS sealing_timestamp 
                           FROM fil_miner_view_days_v4
                           WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                          GROUP BY miner, date
+                          GROUP BY miner, timestamp
                           ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
                     ),
 
@@ -260,7 +260,7 @@ class EnergyIntensityModel {
                           date_trunc('${filter}', date::date) AS storage_timestamp
                           FROM fil_miner_view_days_v4
                           WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                          GROUP BY miner, date
+                          GROUP BY miner, timestamp
                           ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
                     ),
 
@@ -292,7 +292,7 @@ class EnergyIntensityModel {
                           date_trunc('${filter}', date::date) AS sealing_timestamp 
                           FROM fil_network_view_days
                           WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                          GROUP BY date
+                          GROUP BY timestamp
                           ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
                     ),
 
@@ -302,7 +302,7 @@ class EnergyIntensityModel {
                           date_trunc('${filter}', date::date) AS storage_timestamp
                           FROM fil_network_view_days
                           WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                          GROUP BY date
+                          GROUP BY timestamp
                           ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}
                     ),
 
