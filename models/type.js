@@ -11,7 +11,8 @@ var DATA_TYPE  = {
     kWh     : 'kWh',
     kW     : 'kW',
     PERCENTAGE : 'percentage',
-    MW_per_EiB : 'MW_per_EiB'
+    MW_per_EiB : 'MW_per_EiB',
+    co2 : 'co2'
 };
 
 var COLOR = {

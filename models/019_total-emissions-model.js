@@ -15,7 +15,7 @@ class TotalEmissionsModel {
         this.name = 'Total Emissions';
         this.category = CATEGORY.EMISSIONS; // see type.js
         this.x = DATA_TYPE.TIME;
-        this.y = DATA_TYPE.kWh;
+        this.y = DATA_TYPE.co2;
         this.version = VERSION.v0;
     }
 
