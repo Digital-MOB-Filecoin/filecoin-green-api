@@ -40,20 +40,21 @@ class TotalEmissionsModel {
 
         try {
                 result = await this.pool.query(`
-                with energy_use as(
-                    SELECT
-                        SUM((ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue}) OVER(ORDER BY date) AS energy_use,
-                        date_trunc('${filter}', date::date) AS energy_use_timestamp,
-                        date_trunc('${filter}', date::date) AS timestamp
+                  with emissions_data as (SELECT
+                    value,
+                    miner,
+                    timestamp AS start_date
+                    FROM (
+                        SELECT
+                            date_trunc('day', date::date) AS timestamp,
+                               miner,
+                            SUM( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) AS value
                         FROM fil_emissions_view
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp, date, total_per_day
+                        WHERE (date::date >= '2022-03-04'::date) AND (date::date <= '2022-09-04'::date)
+                        GROUP BY miner,date,timestamp, total_per_day, avg_wt_value, avg_un_value
                         ORDER BY timestamp
-                  )
-                  SELECT
-                  COALESCE( energy_use, 0) as value,
-                  energy_use_timestamp AS start_date
-                  FROM energy_use
+                 ) q)
+               SELECT DISTINCT ON (start_date) start_date, value FROM emissions_data;
                 `);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
