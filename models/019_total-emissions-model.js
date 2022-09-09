@@ -46,11 +46,11 @@ class TotalEmissionsModel {
                     timestamp AS start_date
                     FROM (
                         SELECT
-                            date_trunc('day', date::date) AS timestamp,
-                               miner,
+                            date_trunc('${filter}', date::date) AS timestamp,
+                            miner,
                             SUM( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) AS value
                         FROM fil_emissions_view
-                        WHERE (date::date >= '2022-03-04'::date) AND (date::date <= '2022-09-04'::date)
+                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                         GROUP BY miner,date,timestamp, total_per_day, avg_wt_value, avg_un_value
                         ORDER BY timestamp
                  ) q)
@@ -77,7 +77,7 @@ class TotalEmissionsModel {
                     ${formula} AS value
                 FROM fil_emissions_view
                 WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                GROUP BY miner,timestamp,date,total_per_day,avg_wt_value,avg_un_value
+                GROUP BY miner, timestamp, date, total_per_day, avg_wt_value, avg_un_value
                 ORDER BY timestamp
          ) q;`);
         } catch (e) {
