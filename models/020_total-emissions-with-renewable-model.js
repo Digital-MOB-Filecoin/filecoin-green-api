@@ -61,7 +61,7 @@ class TotalEmissionsWithRenewableModel {
                                   date_trunc('${filter}', date::date) AS timestamp,
                                   miner,
                                 SUM( (
-                                    ( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} -  COALESCE(renewableEnergyWh, 0 )) * COALESCE(avg_wt_value, avg_un_value, 0) ) ) OVER(ORDER BY date) AS value
+                                    ( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} - (COALESCE(renewableEnergyWh, 0 ) / 1000)) * COALESCE(avg_wt_value, avg_un_value, 0) ) ) OVER(ORDER BY date) AS value
                               FROM datapoints
                               WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                               GROUP BY miner,date,timestamp, total_per_day, avg_wt_value, avg_un_value, renewableEnergyWh
@@ -102,7 +102,7 @@ class TotalEmissionsWithRenewableModel {
          )
          SELECT
             emissions_data.timestamp AS start_date,
-            SUM((energyWh - COALESCE(renewableEnergyWh, 0)) * emmisions_coeff) OVER(ORDER BY emissions_data.timestamp) AS value
+            SUM((energyWh - (COALESCE(renewableEnergyWh, 0) / 1000 )) * emmisions_coeff) OVER(ORDER BY emissions_data.timestamp) AS value
         FROM emissions_data
         full outer join renewable_data on emissions_data.timestamp = renewable_data.timestamp;
 
