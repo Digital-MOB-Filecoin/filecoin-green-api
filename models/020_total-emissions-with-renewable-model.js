@@ -49,7 +49,7 @@ class TotalEmissionsWithRenewableModel {
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_miners_data_view
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp, date
+                        GROUP BY timestamp
                         ORDER BY timestamp
                 ) q;
                 `);
@@ -74,7 +74,7 @@ class TotalEmissionsWithRenewableModel {
                         date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_miners_data_view
                         WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY miner, date
+                        GROUP BY miner, timestamp
                         ORDER BY timestamp
                 ) q;
          `);
@@ -89,9 +89,9 @@ class TotalEmissionsWithRenewableModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery(start, end, filter, miner, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date))`);
+            result = await this.MinerQuery(start, end, filter, miner, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
         } else {
-            result = await this.NetworkQuery(start, end, filter, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date))`);
+            result = await this.NetworkQuery(start, end, filter, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
         }
 
         return result;
