@@ -151,9 +151,9 @@ class TotalEmissionsWithRenewableModel {
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner, timestamp
@@ -163,9 +163,9 @@ class TotalEmissionsWithRenewableModel {
                 } else {
                     fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY timestamp
@@ -192,6 +192,7 @@ class TotalEmissionsWithRenewableModel {
     async ResearchExport(id, start, end, miner, offset, limit) {
         let data = [];
         let fields;
+        let filter = 'day';
 
         INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
 
@@ -201,9 +202,9 @@ class TotalEmissionsWithRenewableModel {
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner, timestamp
@@ -213,9 +214,9 @@ class TotalEmissionsWithRenewableModel {
                 } else {
                     fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY timestamp
