@@ -4,10 +4,6 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
-const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
-
-const energy_conts_v1p0p1 = require("./energy_params/v-1-0-1-perGiB.json")
-
 class TotalEmissionsModel {
     constructor(pool) {
         this.code_name = 'TotalEmissionsModel';
@@ -35,21 +31,23 @@ class TotalEmissionsModel {
         return `Total amount of emissions during a time period gCO2`;
     }
 
-    async NetworkQuery(start, end, filter, consts) {
+    async NetworkQuery(start, end, filter, formula) {
         var result;
 
         try {
                 result = await this.pool.query(`
-                  with emissions_data as (
-                        SELECT
-                            date_trunc('${filter}', date::date) AS start_date,
-                            SUM( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) AS value
-                        FROM fil_emissions_view
+                SELECT
+                value,
+                timestamp AS start_date
+                FROM (
+                    SELECT
+                        ${formula}                             AS value,
+                        date_trunc('${filter}', date::date) AS timestamp
+                        FROM fil_miners_data_view
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY date, avg_wt_value, avg_un_value
-                        ORDER BY start_date
-                 )
-               SELECT DISTINCT ON (start_date) start_date, value FROM emissions_data;
+                        GROUP BY timestamp
+                        ORDER BY timestamp
+                ) q;
                 `);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
@@ -58,23 +56,24 @@ class TotalEmissionsModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async MinerQuery(formula, start, end, filter, miner) {
+    async MinerQuery(start, end, filter, miner, formula) {
         var result;
 
         try {
             result = await this.pool.query(`
             SELECT
-            value,
-            timestamp AS start_date
-            FROM (
-                SELECT
-                    date_trunc('${filter}', date::date) AS timestamp,
-                    ${formula} AS value
-                FROM fil_emissions_view
-                WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                GROUP BY miner, timestamp, date, total_per_day, avg_wt_value, avg_un_value
-                ORDER BY timestamp
-         ) q;`);
+                value,
+                timestamp AS start_date
+                FROM (
+                    SELECT
+                        ${formula}                             AS value,
+                        date_trunc('${filter}', date::date) AS timestamp
+                        FROM fil_miners_data_view
+                        WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                        GROUP BY miner, timestamp
+                        ORDER BY timestamp
+                ) q;
+         `);
         } catch (e) {
             ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
         }
@@ -82,13 +81,13 @@ class TotalEmissionsModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableSealedStoredOverTime(start, end, filter, miner, consts) {
+    async VariableEmissions(start, end, filter, miner, field) {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery(`SUM( (ROUND(AVG(total)) * 24 * ${consts.storage_kW_GiB} + SUM(total_per_day) * ${consts.sealing_kWh_GiB}) * ${consts.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date)`, start, end, filter, miner);
+            result = await this.MinerQuery(start, end, filter, miner, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
         } else {
-            result = await this.NetworkQuery(start, end, filter, consts);
+            result = await this.NetworkQuery(start, end, filter, `ROUND(SUM(SUM(${field} * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
         }
 
         return result;
@@ -111,7 +110,7 @@ class TotalEmissionsModel {
         }
 
         // Minimum cumulative energy use
-        let cumulativeEnergyData_min = await this.VariableSealedStoredOverTime(start, end, filter, miner, energy_conts_v1p0p1.min);
+        let cumulativeEnergyData_min = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_lower');
         let cumulativeEnergy_min = {
             title: 'Lower Bound',
             color: COLOR.green,
@@ -120,7 +119,7 @@ class TotalEmissionsModel {
         result.data.push(cumulativeEnergy_min);
 
         // Estimated cumulative energy use
-        let cumulativeEnergyData_est = await this.VariableSealedStoredOverTime(start, end, filter, miner, energy_conts_v1p0p1.estimate);
+        let cumulativeEnergyData_est = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_estimate');
         let cumulativeEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
@@ -129,7 +128,7 @@ class TotalEmissionsModel {
         result.data.push(cumulativeEnergy_est);
 
         // Maximum cumulative energy use
-        let cumulativeEnergyData_max = await this.VariableSealedStoredOverTime(start, end, filter, miner, energy_conts_v1p0p1.max);
+        let cumulativeEnergyData_max = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_upper');
         let cumulativeEnergy_max = {
             title: 'Upper Bound',
             color: COLOR.orange,
@@ -152,35 +151,33 @@ class TotalEmissionsModel {
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_lower\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_estimate\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_upper\" \
-                    FROM fil_emissions_view
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner,timestamp,date,total_per_day
-                    ORDER BY timestamp \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    FROM fil_miners_data_view
+                    WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY miner, timestamp
+                    ORDER BY timestamp
                     LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['emissions_lower','emissions_estimate','emissions_upper','timestamp'];
-                    result = await this.pool.query(`with emissions_data as (SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_lower\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_estimate\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_upper\" \
-                    FROM fil_emissions_view
+                    fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
+                    result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY date, avg_wt_value, avg_un_value
-                    ORDER BY timestamp) \
-                    SELECT DISTINCT ON (timestamp) timestamp,  \"emissions_lower\",  \"emissions_estimate\",  \"emissions_upper\" FROM emissions_data LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY timestamp
+                    ORDER BY timestamp
+                    LIMIT ${limit} OFFSET ${offset}`);
                 }
-
-
 
                 if (result?.rows) {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalEmissions] Export error:${e}`);
+            ERROR(`[TotalEmissionsModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -195,6 +192,7 @@ class TotalEmissionsModel {
     async ResearchExport(id, start, end, miner, offset, limit) {
         let data = [];
         let fields;
+        let filter = 'day';
 
         INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
 
@@ -203,36 +201,34 @@ class TotalEmissionsModel {
 
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_lower\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_estimate\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_upper\" \
-                    FROM fil_emissions_view
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner,timestamp,date,total_per_day
-                    ORDER BY timestamp \
+                    result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    FROM fil_miners_data_view
+                    WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY miner, timestamp
+                    ORDER BY timestamp
                     LIMIT ${limit} OFFSET ${offset}`);
 
                 } else {
-                    fields = ['emissions_lower','emissions_estimate','emissions_upper','timestamp'];
-                    result = await this.pool.query(`with emissions_data as (SELECT date_trunc('day', date::date) AS timestamp \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.min.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.min.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.min.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_lower\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.estimate.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.estimate.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.estimate.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_estimate\" \
-                    , SUM( (ROUND(AVG(total)) * 24 * ${energy_conts_v1p0p1.max.storage_kW_GiB} + SUM(total_per_day) * ${energy_conts_v1p0p1.max.sealing_kWh_GiB}) * ${energy_conts_v1p0p1.max.pue} * COALESCE(avg_wt_value, avg_un_value, 0)) OVER(ORDER BY date) as \"emissions_upper\" \
-                    FROM fil_emissions_view
+                    fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
+                    result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
+                    , ROUND(SUM(SUM(energy_use_kW_lower * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
+                    , ROUND(SUM(SUM(energy_use_kW_estimate * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
+                    , ROUND(SUM(SUM(energy_use_kW_upper * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY date, avg_wt_value, avg_un_value
-                    ORDER BY timestamp) \
-                    SELECT DISTINCT ON (timestamp) timestamp,  \"emissions_lower\",  \"emissions_estimate\",  \"emissions_upper\" FROM emissions_data LIMIT ${limit} OFFSET ${offset}`);
+                    GROUP BY timestamp
+                    ORDER BY timestamp
+                    LIMIT ${limit} OFFSET ${offset}`);
                 }
-
-
 
                 if (result?.rows) {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalEmissions] Export error:${e}`);
+            ERROR(`[TotalEmissionsModel] Export error:${e}`);
         }
 
         let exportData = {
