@@ -4,10 +4,6 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
-const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
-
-const energy_conts_v1p0p1 = require("./energy_params/v-1-0-1-perGiB.json")
-
 class TotalEmissionsWithRenewableModel {
     constructor(pool) {
         this.code_name = 'TotalEmissionsWithRenewableModel';
@@ -85,7 +81,7 @@ class TotalEmissionsWithRenewableModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableEmissions(start, end, filter, miner, consts, field) {
+    async VariableEmissions(start, end, filter, miner, field) {
         var result;
 
         if (miner) {
@@ -114,7 +110,7 @@ class TotalEmissionsWithRenewableModel {
         }
 
         // Minimum cumulative energy use
-        let cumulativeEnergyData_min = await this.VariableEmissions(start, end, filter, miner, energy_conts_v1p0p1.min, 'energy_use_kW_lower');
+        let cumulativeEnergyData_min = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_lower');
         let cumulativeEnergy_min = {
             title: 'Lower Bound',
             color: COLOR.green,
@@ -123,7 +119,7 @@ class TotalEmissionsWithRenewableModel {
         result.data.push(cumulativeEnergy_min);
 
         // Estimated cumulative energy use
-        let cumulativeEnergyData_est = await this.VariableEmissions(start, end, filter, miner, energy_conts_v1p0p1.estimate, 'energy_use_kW_estimate');
+        let cumulativeEnergyData_est = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_estimate');
         let cumulativeEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
@@ -132,7 +128,7 @@ class TotalEmissionsWithRenewableModel {
         result.data.push(cumulativeEnergy_est);
 
         // Maximum cumulative energy use
-        let cumulativeEnergyData_max = await this.VariableEmissions(start, end, filter, miner, energy_conts_v1p0p1.max, 'energy_use_kW_upper');
+        let cumulativeEnergyData_max = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_upper');
         let cumulativeEnergy_max = {
             title: 'Upper Bound',
             color: COLOR.orange,
@@ -181,7 +177,7 @@ class TotalEmissionsWithRenewableModel {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalEmissions] Export error:${e}`);
+            ERROR(`[TotalEmissionsWithRenewableModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -231,7 +227,7 @@ class TotalEmissionsWithRenewableModel {
                     data = result?.rows;
                 }
         } catch (e) {
-            ERROR(`[TotalEmissions] Export error:${e}`);
+            ERROR(`[TotalEmissionsWithRenewableModel] Export error:${e}`);
         }
 
         let exportData = {
