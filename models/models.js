@@ -24,6 +24,7 @@ const { RenewableEnergyRatioModel } = require('./017_renewable-energy-ratio-mode
 const { EnergyIntensityModel } = require('./018_energy-intensity-model.js');
 const { TotalEmissionsModel } = require('./019_total-emissions-model.js');
 const { TotalEmissionsWithRenewableModel } = require('./020_total-emissions-with-renewable-model.js');
+const { TotalEmissionsWithRenewableFloorModel } = require('./021_total-emissions-with-renewable-floor-model.js');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -45,6 +46,7 @@ let renewableEnergyRatioModel = new RenewableEnergyRatioModel(pool);
 let energyIntensityModel = new EnergyIntensityModel(pool);
 let totalEmissionsModel = new TotalEmissionsModel(pool);
 let totalEmissionsWithRenewableModel = new TotalEmissionsWithRenewableModel(pool);
+let totalEmissionsWithRenewableFloorModel = new TotalEmissionsWithRenewableFloorModel(pool);
 
 
 class Models {
@@ -54,9 +56,10 @@ class Models {
     }
 
     LoadModels() {
-        //this.Register(renewableEnergyRatioModel);    //Renewable energy ratio
-        this.Register(totalEmissionsModel);           //Total emissions 
-        this.Register(totalEmissionsWithRenewableModel); //Total emissions with renewable
+        //this.Register(renewableEnergyRatioModel);           //Renewable energy ratio
+        this.Register(totalEmissionsModel);                   //Total emissions 
+        this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
+        this.Register(totalEmissionsWithRenewableFloorModel); //Total emissions with renewable (floor)
         this.Register(totalEnergyModelv_1_0_1);       //Energy consumption rate (v1.0.1)
         this.Register(sealingEnergyModelv_1_0_1);     //Energy used to seal data (v1.0.1)
         this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
