@@ -5,6 +5,7 @@ const { INFO, ERROR, WARNING } = require('./logs');
 const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
 const { head, block, miners, filchain } = require('./filchain-api');
 const { List, Model, Export, ResearchExport } = require('./models-api');
+const { MapList } = require('./map-api');
 
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yaml');
@@ -484,6 +485,8 @@ app.get("/models/list", List);
 app.get("/models/model", Model);
 app.get("/models/export", Export);
 app.get("/models/research_export", ResearchExport);
+
+app.get("/map/list", MapList);
 
 app.listen(config.filgreen.api_port, () => {
     INFO("FilGreen API running on port: " + config.filgreen.api_port);
