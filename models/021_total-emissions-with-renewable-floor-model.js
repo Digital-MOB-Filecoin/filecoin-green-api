@@ -85,9 +85,9 @@ class TotalEmissionsWithRenewableFloorModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery(start, end, filter, miner, `ROUND(SUM(SUM(greatest(0, (${field} - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
+            result = await this.MinerQuery(start, end, filter, miner, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
         } else {
-            result = await this.NetworkQuery(start, end, filter, `ROUND(SUM(SUM(greatest(0, (${field} - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))`);
+            result = await this.NetworkQuery(start, end, filter, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
         }
 
         return result;
@@ -151,9 +151,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_lower - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_estimate - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_upper - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner, timestamp
@@ -163,9 +163,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 } else {
                     fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_lower - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_estimate - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_upper - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY timestamp
@@ -202,9 +202,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 if (miner) {
                     fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_lower - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_estimate - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_upper - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY miner, timestamp
@@ -214,9 +214,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 } else {
                     fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
                     result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_lower - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_lower\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_estimate - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_estimate\" \
-                    , ROUND(SUM(SUM(greatest(0, (energy_use_kW_upper - renewable_energy_kW)) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))) as \"emissions_upper\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
+                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
                     FROM fil_miners_data_view
                     WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY timestamp
