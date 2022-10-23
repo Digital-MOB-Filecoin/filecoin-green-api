@@ -28,7 +28,62 @@ const MapList = async function (req, res, next) {
     }
 };
 
+// GET
+const MapListCountry = async function (req, res, next) {
+    let country = req.query?.country;
+
+    if (!country) {
+        ERROR(`GET[/map/list/country] Failed to get country map list, no country param provided`);
+        error_response(402, 'Failed to get country map list, no country param provided', res);
+        return;
+    }
+
+    try {
+        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}';`);
+
+        if (result.rows.length > 0) {
+            INFO(`GET[/map/list/country]: ${JSON.stringify(result.rows.length)} datapoints`);
+            res.json(result.rows);
+        } else {
+            ERROR(`GET[/map/list/country]: Failed to get country map list, result: ${JSON.stringify(result.rows)}`);
+            error_response(402, 'Failed to get country map list', res);
+        }
+
+    } catch (e) {
+        ERROR(`GET[/map/list] error: ${e}`);
+        error_response(401, 'Failed to get  map list', res);
+    }
+};
+
+// GET
+const MapListMiner = async function (req, res, next) {
+    let miner = req.query?.miner;
+
+    if (!miner) {
+        ERROR(`GET[/map/list/miner] Failed to get miner map list, no miner param provided`);
+        error_response(402, 'Failed to get miner map list, no miner param provided', res);
+        return;
+    }
+
+    try {
+        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE miner = '${miner}';`);
+
+        if (result.rows.length > 0) {
+            INFO(`GET[/map/list/miner]: ${JSON.stringify(result.rows.length)} datapoints`);
+            res.json(result.rows);
+        } else {
+            ERROR(`GET[/map/list/miner]: Failed to get miner map list, result: ${JSON.stringify(result.rows)}`);
+            error_response(402, 'Failed to get miner map list', res);
+        }
+
+    } catch (e) {
+        ERROR(`GET[/map/list] error: ${e}`);
+        error_response(401, 'Failed to get  map list', res);
+    }
+};
 
 module.exports = {
     MapList,
+    MapListCountry,
+    MapListMiner,
 }
