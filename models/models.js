@@ -155,7 +155,7 @@ class Models {
             id = 0;
             for (const model of this.models) {
                 if (model.CodeName() === code_name) {
-                    result = await model.Export(id, start, end, miner, offset, limit);
+                    result = await model.Export(id.toString(), start, end, miner, offset, limit, filter);
                     found = true;
                 }
 
@@ -194,7 +194,7 @@ class Models {
             id = 0;
             for (const model of this.models) {
                 if (model.CodeName() === code_name) {
-                    result = await model.ResearchExport(id, start, end, miner, offset, limit);
+                    result = await model.ResearchExport(id.toString(), start, end, miner, offset, limit);
                     found = true;
                 }
 
