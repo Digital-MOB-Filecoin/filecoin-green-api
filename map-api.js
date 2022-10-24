@@ -31,6 +31,16 @@ const MapList = async function (req, res, next) {
 // GET
 const MapListCountry = async function (req, res, next) {
     let country = req.query?.country;
+    let limit = req.query?.limit;
+    let offset = req.query?.offset;
+
+    if (!limit) {
+        limit = 500;
+    }
+
+    if (!offset) {
+        offset = 0;
+    }
 
     if (!country) {
         ERROR(`GET[/map/list/country] Failed to get country map list, no country param provided`);
@@ -39,7 +49,7 @@ const MapListCountry = async function (req, res, next) {
     }
 
     try {
-        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}';`);
+        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}' LIMIT ${limit} OFFSET ${offset};`);
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list/country]: ${JSON.stringify(result.rows.length)} datapoints`);
@@ -66,7 +76,15 @@ const MapListMiner = async function (req, res, next) {
     }
 
     try {
-        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE miner = '${miner}';`);
+        let miners = miner.split(',');
+        let query = `SELECT miner, country, city, lat, long FROM fil_location_view WHERE miner = '${miners[0]}'`;
+        for (let i = 1; i < miners.length; i++) {
+            query += ` OR miner = '${miners[i]}'`;
+        }
+
+        console.log(query);
+
+        var result = await pool.query(`${query};`);
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list/miner]: ${JSON.stringify(result.rows.length)} datapoints`);
