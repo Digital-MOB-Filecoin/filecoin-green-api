@@ -49,7 +49,15 @@ const MapListCountry = async function (req, res, next) {
     }
 
     try {
-        var result = await pool.query(`SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}' LIMIT ${limit} OFFSET ${offset};`);
+        var result = await pool.query(`
+        with miners_data as (SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}'),
+             power_data as (SELECT miner, power FROM fil_miners_view_v3)
+             SELECT
+                miners_data.miner, country, city, lat, long, power
+             FROM miners_data
+             LEFT JOIN power_data ON miners_data.miner = power_data.miner
+             LIMIT ${limit} OFFSET ${offset};
+        `);
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list/country]: ${JSON.stringify(result.rows.length)} datapoints`);
@@ -77,12 +85,18 @@ const MapListMiner = async function (req, res, next) {
 
     try {
         let miners = miner.split(',');
-        let query = `SELECT miner, country, city, lat, long FROM fil_location_view WHERE miner = '${miners[0]}'`;
+        let query = `With miners_data as (SELECT miner, country, city, lat, long FROM fil_location_view WHERE miner = '${miners[0]}'`;
         for (let i = 1; i < miners.length; i++) {
             query += ` OR miner = '${miners[i]}'`;
         }
 
-        console.log(query);
+        query += `),
+            power_data as (SELECT miner, power FROM fil_miners_view_v3)
+            SELECT
+                miners_data.miner, country, city, lat, long, power
+            FROM miners_data
+            LEFT JOIN power_data ON miners_data.miner = power_data.miner
+        `;
 
         var result = await pool.query(`${query};`);
 
