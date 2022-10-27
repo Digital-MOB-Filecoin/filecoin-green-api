@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+env:
+  SLACK_CHANNEL: infra-ci-filgreen
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: filecoin/filecoin-green-api
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,7 +24,7 @@ jobs:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
-        channel: infra-ci-filgreen
+        channel: ${{ env.SLACK_CHANNEL }}
         status: STARTED
         color: warning
 
@@ -32,28 +37,28 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-2
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Echo IMAGE_TAG
+      env:
+        IMAGE_TAG: ${{ steps.vars.outputs.version }}
+      run: |
+        echo "Version to set in deployment manifests: ${IMAGE_TAG}"        
+
     - name: Build, tag and push the image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: filecoin/filgreen/filecoin-green-api
+        ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
         IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
         docker build \
           -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
           ${GITHUB_WORKSPACE}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG}
-
-    - name: Echo IMAGE_TAG
-      env:
-        IMAGE_TAG: ${{ steps.vars.outputs.version }}
-      run: |
-        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
     - name: Notify Slack success
       if: success()
@@ -62,7 +67,7 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
-        channel: infra-ci-filgreen
+        channel: ${{ env.SLACK_CHANNEL }}
         status: SUCCESS
         color: good
 
@@ -73,7 +78,7 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
-        channel: infra-ci-filgreen
+        channel: ${{ env.SLACK_CHANNEL }}
         status: FAILED
         color: danger
 
