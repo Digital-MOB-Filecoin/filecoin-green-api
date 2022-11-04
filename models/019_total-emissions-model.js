@@ -8,7 +8,7 @@ class TotalEmissionsModel {
     constructor(pool) {
         this.code_name = 'TotalEmissionsModel';
         this.pool = pool;
-        this.name = 'Total Emissions';
+        this.name = 'Location-Based Emissions (Ignoring Renewable Energy Purchases)';
         this.category = CATEGORY.EMISSIONS; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.co2;
