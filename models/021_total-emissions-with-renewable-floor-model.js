@@ -37,17 +37,18 @@ class TotalEmissionsWithRenewableFloorModel {
         try {
                 result = await this.pool.query(`
                 SELECT
-                value,
+                SUM(value) as value,
                 timestamp AS start_date
                 FROM (
-                    SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
+                        SELECT
+                            ${formula}                          AS value,
+                            date_trunc('${filter}', date::date) AS timestamp
                         FROM fil_miners_data_view
                         WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp
+                        GROUP BY miner, timestamp
                         ORDER BY timestamp
-                ) q;
+                    ) q
+                GROUP BY timestamp;
                 `);
         } catch (e) {
             ERROR(`[TotalEmissionsWithRenewableFloorModel] NetworkQuery error:${e}`);
@@ -87,7 +88,7 @@ class TotalEmissionsWithRenewableFloorModel {
         if (miner) {
             result = await this.MinerQuery(start, end, filter, miner, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
         } else {
-            result = await this.NetworkQuery(start, end, filter, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
+            result = await this.NetworkQuery(start, end, filter, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (PARTITION BY miner ORDER by date_trunc('${filter}', date::date))))`);
         }
 
         return result;
