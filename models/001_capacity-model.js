@@ -86,19 +86,18 @@ class CapacityModel {
         var result;
 
         try {
-                result = await this.pool.query(`
+            result = await this.pool.query(`
                 SELECT
-                value,
-                timestamp AS start_date
+                ROUND(AVG(value)) as value,
+                date_trunc('day', date::date) AS start_date
                 FROM (
                     SELECT
-                        ${formula}                   AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
+                        SUM(total) AS value,
+                        date
                     FROM fil_miners_data_view_country
                     WHERE (country='${country}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY country,timestamp
-                    ORDER BY timestamp
-             ) q;`);
+                    GROUP BY country, date
+             ) q GROUP BY date ORDER BY date;`);
         } catch (e) {
             ERROR(`[CapacityModel] CountryQuery error:${e}`);
         }
@@ -112,7 +111,7 @@ class CapacityModel {
         if (miner) {
             result = await this.MinerQuery('ROUND(AVG(total))', start, end, filter, miner);
         } else if (country) {
-            result = await this.CountryQuery('ROUND(AVG(total))', start, end, filter, country);
+            result = await this.CountryQuery('', start, end, filter, country);
         } else {
             result = await this.NetworkQuery('ROUND(AVG(total))', start, end, filter);
         }

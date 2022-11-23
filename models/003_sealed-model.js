@@ -82,11 +82,37 @@ class SealedModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableSealed(start, end, filter, miner) {
+    async CountryQuery(formula, start, end, filter, country) {
+        var result;
+
+        try {
+            result = await this.pool.query(`
+                SELECT
+                ROUND(AVG(value)) as value,
+                date_trunc('day', date::date) AS start_date
+                FROM (
+                    SELECT
+                        SUM(total_per_day) AS value,
+                        date
+                    FROM fil_miners_data_view_country
+                    WHERE (country='${country}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY country, date
+             ) q GROUP BY date ORDER BY date;
+                `);
+        } catch (e) {
+            ERROR(`[CapacityModel] CountryQuery error:${e}`);
+        }
+
+        return add_time_interval(start, end, filter, result.rows);
+    }
+
+    async VariableSealed(start, end, filter, miner, country) {
         var result;
 
         if (miner) {
             result = await this.MinerQuery('ROUND(AVG(total_per_day))', start, end, filter, miner);
+        } else if (country) {
+            result = await this.CountryQuery('', start, end, filter, country);
         } else {
             result = await this.NetworkQuery('ROUND(AVG(total_per_day))', start, end, filter);
         }
@@ -94,8 +120,8 @@ class SealedModel {
         return result;
     }
 
-    async Query(id, start, end, filter, miner) {
-        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
+    async Query(id, start, end, filter, miner, country) {
+        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}, country: ${country}`);
 
         let result = {
             id : id,
@@ -111,7 +137,7 @@ class SealedModel {
         }
 
         // variable 1 - Sealed
-        let sealedData = await this.VariableSealed(start, end, filter, miner);
+        let sealedData = await this.VariableSealed(start, end, filter, miner, country);
         let sealedVariable = {
             title: 'Capacity per day',
             color: COLOR.green,
