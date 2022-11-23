@@ -97,7 +97,7 @@ class CapacityModel {
                     FROM fil_miners_data_view_country
                     WHERE (country='${country}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
                     GROUP BY country, date
-             ) q GROUP BY date ORDER BY date;
+             ) q GROUP BY start_date ORDER BY start_date;
              `);
         } catch (e) {
             ERROR(`[CapacityModel] CountryQuery error:${e}`);
