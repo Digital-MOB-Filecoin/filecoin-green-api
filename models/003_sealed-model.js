@@ -89,7 +89,7 @@ class SealedModel {
             result = await this.pool.query(`
                 SELECT
                 ROUND(AVG(value)) as value,
-                date_trunc('day', date::date) AS start_date
+                date_trunc('${filter}', date::date) AS start_date
                 FROM (
                     SELECT
                         SUM(total_per_day) AS value,
