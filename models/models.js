@@ -1,7 +1,7 @@
 const config = require('./../config');
 const { Pool } = require("pg");
 const { INFO, ERROR, WARNING } = require('./../logs');
-const { ValidModel, Start, End, Filter, Offset, Limit, Miner } = require('./utils');
+const { ValidModel, Start, End, Filter, Offset, Limit, Miner, Country } = require('./utils');
 const pool = new Pool(config.database);
 
 const { CapacityModel } = require('./001_capacity-model');
@@ -102,11 +102,12 @@ class Models {
         let start = Start(query);
         let end = End(query);
         let filter = Filter(query);
+        let country = Country(query);
         let miner = Miner(query);
 
         if (id) {
             if (id >= 0 && id < this.models.length) {
-                result = await this.models[id].Query(id, start, end, filter, miner);
+                result = await this.models[id].Query(id, start, end, filter, miner, country);
             } else {
                 ERROR(`Unable to query model with id: ${id}`);
             }
@@ -115,7 +116,7 @@ class Models {
             id = 0;
             for (const model of this.models) {
                 if (model.CodeName() === code_name) {
-                    result = await model.Query(id.toString(), start, end, filter, miner);
+                    result = await model.Query(id.toString(), start, end, filter, miner, country);
                     found = true;
                 }
 

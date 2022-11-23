@@ -82,11 +82,37 @@ class CapacityModel {
         return add_time_interval(start, end, filter, result.rows);
     }
 
-    async VariableTotalCapacity(start, end, filter, miner) {
+    async CountryQuery(formula, start, end, filter, country) {
+        var result;
+
+        try {
+                result = await this.pool.query(`
+                SELECT
+                value,
+                timestamp AS start_date
+                FROM (
+                    SELECT
+                        ${formula}                   AS value,
+                        date_trunc('${filter}', date::date) AS timestamp
+                    FROM fil_miners_data_view_country
+                    WHERE (country='${country}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
+                    GROUP BY country,timestamp
+                    ORDER BY timestamp
+             ) q;`);
+        } catch (e) {
+            ERROR(`[CapacityModel] CountryQuery error:${e}`);
+        }
+
+        return add_time_interval(start, end, filter, result.rows);
+    }
+
+    async VariableTotalCapacity(start, end, filter, miner, country) {
         var result;
 
         if (miner) {
             result = await this.MinerQuery('ROUND(AVG(total))', start, end, filter, miner);
+        } else if (country) {
+            result = await this.CountryQuery('ROUND(AVG(total))', start, end, filter, country);
         } else {
             result = await this.NetworkQuery('ROUND(AVG(total))', start, end, filter);
         }
@@ -106,8 +132,8 @@ class CapacityModel {
         return result;
     }
 
-    async Query(id, start, end, filter, miner) {
-        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
+    async Query(id, start, end, filter, miner, country) {
+        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}, country: ${country}`);
 
         let result = {
             id : id,
@@ -123,7 +149,7 @@ class CapacityModel {
         }
 
         // variable 1 - Total Capacity
-        let totalCapacityData = await this.VariableTotalCapacity(start, end, filter, miner);
+        let totalCapacityData = await this.VariableTotalCapacity(start, end, filter, miner, country);
         let totalCapacityVariable = {
             title: 'Data storage capacity',
             color: COLOR.green,

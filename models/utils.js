@@ -178,6 +178,16 @@ function Miner(query) {
     return miner;
 }
 
+function Country(query) {
+    let country = undefined;
+    
+    if (query?.country) {
+        country = query.country;
+    }
+
+    return country;
+}
+
 module.exports = {
     ValidModel,
     Start,
@@ -186,6 +196,7 @@ module.exports = {
     Offset,
     Limit,
     Miner,
+    Country,
     add_time_interval,
     get_epoch
 }
