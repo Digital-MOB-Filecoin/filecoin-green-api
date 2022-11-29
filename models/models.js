@@ -62,9 +62,11 @@ class Models {
         this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
         this.Register(cumulativeEnergyModel_v_1_0_1); //Cumulative Energy Use (v1.0.1)
         this.Register(renewableEnergyModel);          //Cumulative renewable energy purchases
+
         this.Register(totalEmissionsModel);                   //Total emissions 
         this.Register(totalEmissionsWithRenewableFloorModel); //Total emissions with renewable (floor)
         this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
+        
         this.Register(energyIntensityModel);          //Energy Intensity
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity
@@ -144,10 +146,11 @@ class Models {
         let offset = Offset(query);
         let limit = Limit(query);
         let filter = Filter(query);
+        let country = Country(query);
 
         if (id) {
             if (id >= 0 && id < this.models.length) {
-                result = await this.models[id].Export(id.toString(), start, end, miner, offset, limit, filter);
+                result = await this.models[id].Export(id.toString(), start, end, miner, country, offset, limit, filter);
             } else {
                 ERROR(`Unable to export model with id: ${id}`);
             }
@@ -156,7 +159,7 @@ class Models {
             id = 0;
             for (const model of this.models) {
                 if (model.CodeName() === code_name) {
-                    result = await model.Export(id.toString(), start, end, miner, offset, limit, filter);
+                    result = await model.Export(id.toString(), start, end, miner, country, offset, limit, filter);
                     found = true;
                 }
 
@@ -183,10 +186,11 @@ class Models {
         let miner = Miner(query);
         let offset = Offset(query);
         let limit = Limit(query);
+        let country = Country(query);
 
         if (id) {
             if (id >= 0 && id < this.models.length) {
-                result = await this.models[id].ResearchExport(id.toString(), start, end, miner, offset, limit);
+                result = await this.models[id].ResearchExport(id.toString(), start, end, miner, country, offset, limit);
             } else {
                 ERROR(`Unable to export model with id: ${id}`);
             }
@@ -195,7 +199,7 @@ class Models {
             id = 0;
             for (const model of this.models) {
                 if (model.CodeName() === code_name) {
-                    result = await model.ResearchExport(id.toString(), start, end, miner, offset, limit);
+                    result = await model.ResearchExport(id.toString(), start, end, miner, country, offset, limit);
                     found = true;
                 }
 
