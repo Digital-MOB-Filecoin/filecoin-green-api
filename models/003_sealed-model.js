@@ -46,7 +46,7 @@ class SealedModel {
                     SELECT
                         SUM(total_per_day) AS value,
                         date
-                    FROM fil_miners_data_view_country
+                    FROM fil_miners_data_view_country_v2
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
              ) q GROUP BY start_date ORDER BY start_date;
@@ -70,7 +70,7 @@ class SealedModel {
                     SELECT
                         ROUND(AVG(total_per_day)) AS value,
                         date_trunc('${params.filter}', date::date) AS timestamp
-                    FROM fil_miners_data_view_country
+                    FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY timestamp
                     ORDER BY timestamp
@@ -94,7 +94,7 @@ class SealedModel {
                     SELECT
                         SUM(total_per_day) AS value,
                         date
-                    FROM fil_miners_data_view_country
+                    FROM fil_miners_data_view_country_v2
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY country, date
              ) q GROUP BY start_date ORDER BY start_date;
@@ -163,7 +163,7 @@ class SealedModel {
                     result = await this.pool.query(`SELECT miner,\
                     ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
                     date_trunc('${params.filter}', date::date) AS timestamp \
-                    FROM fil_miners_data_view_country \
+                    FROM fil_miners_data_view_country_v2 \
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
                     GROUP BY miner,timestamp 
                     ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
@@ -178,7 +178,7 @@ class SealedModel {
                             country,
                             SUM(total_per_day) AS value,
                             date
-                        FROM fil_miners_data_view_country
+                        FROM fil_miners_data_view_country_v2
                         WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                         GROUP BY country, date
                    ) q GROUP BY country, timestamp
@@ -192,7 +192,7 @@ class SealedModel {
                         SELECT
                             SUM(total_per_day) AS value,
                             date
-                        FROM fil_miners_data_view_country
+                        FROM fil_miners_data_view_country_v2
                         WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                         GROUP BY date
                  ) q GROUP BY timestamp

@@ -3,7 +3,8 @@
   "version": "0.2.8",
   "description": "Filecoin Green API",
   "scripts": {
-    "api": "env-cmd node api.js"
+    "api": "env-cmd node api.js",
+    "dev": "env $(cat .env) nodemon api.js"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,8 @@
     "swagger-ui-express": "^4.4.0",
     "time-stamp": "^2.2.0",
     "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
   }
 }

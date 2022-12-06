@@ -89,7 +89,7 @@ class RenewableEnergyModel {
                     SELECT
                         SUM(renewable_energy_kW / 1000) AS value,
                         date
-                    FROM fil_miners_data_view_country
+                    FROM fil_miners_data_view_country_v2
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY country, date
                     ORDER BY date
