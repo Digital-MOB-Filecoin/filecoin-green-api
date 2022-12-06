@@ -40,17 +40,17 @@ class SealedModel {
         try {
                 result = await this.pool.query(`
                 SELECT
-                value,
-                timestamp AS start_date
+                ROUND(AVG(value)) as value,
+                date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        ROUND(AVG(total_per_day)) AS value,
-                        date_trunc('${params.filter}', date::date) AS timestamp
-                        FROM fil_miners_data_view_country
-                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                        GROUP BY timestamp
-                        ORDER BY timestamp
-                ) q;`);
+                        SUM(total_per_day) AS value,
+                        date
+                    FROM fil_miners_data_view_country
+                    WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                    GROUP BY date
+             ) q GROUP BY start_date ORDER BY start_date;
+             `);
         } catch (e) {
             ERROR(`[SealedModel] NetworkQuery error:${e}`);
         }
@@ -169,24 +169,35 @@ class SealedModel {
                     ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
                 } else if (params.country) {
                     fields = ['country','sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT country,\
-                    ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
-                    date_trunc('${params.filter}', date::date) AS timestamp \
-                    FROM fil_miners_data_view_country \
-                    WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
-                    GROUP BY country,timestamp 
+                    result = await this.pool.query(` SELECT
+                    country,
+                    ROUND(AVG(value)) as sealed_GiB,
+                    date_trunc('${params.filter}', date::date) AS timestamp
+                    FROM (
+                        SELECT
+                            country,
+                            SUM(total_per_day) AS value,
+                            date
+                        FROM fil_miners_data_view_country
+                        WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                        GROUP BY country, date
+                   ) q GROUP BY country, timestamp
                     ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
                 } else {
                     fields = ['sealed_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT \
-                    ROUND(AVG(total_per_day)) as \"sealed_GiB\",\
-                    date_trunc('${params.filter}', date::date) AS timestamp \
-                    FROM fil_miners_data_view_country \
-                    WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
-                    GROUP BY timestamp 
+                    result = await this.pool.query(`SELECT
+                    ROUND(AVG(value)) as sealed_GiB,
+                    date_trunc('${params.filter}', date::date) AS timestamp
+                    FROM (
+                        SELECT
+                            SUM(total_per_day) AS value,
+                            date
+                        FROM fil_miners_data_view_country
+                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                        GROUP BY date
+                 ) q GROUP BY timestamp
                     ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
                 }
-
 
                 if (result?.rows) {
                     data = result?.rows;
