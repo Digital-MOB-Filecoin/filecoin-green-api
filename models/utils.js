@@ -168,14 +168,25 @@ function Filter(query) {
     return filter;
 }
 
-function Miner(query) {
-    let miner = undefined;
+function Miners(query) {
+    let result = undefined;
+    let miners = [];
     
-    if (query?.miner) {
-        miner = query.miner;
+    if (query?.miners?.length > 0) {
+        miners = query.miners.split(',');
     }
 
-    return miner;
+    if (miners.length > 0) {
+        result = '(';
+        for (const m of miners ) {
+            result += `'${m}',` ;
+        }
+        result = result.substring(0, result.length-1) + ')';
+    } else if (query?.miner) {
+        result = `('${query.miner}')`;
+    }
+
+    return result;
 }
 
 function Country(query) {
@@ -195,7 +206,7 @@ module.exports = {
     Filter,
     Offset,
     Limit,
-    Miner,
+    Miners,
     Country,
     add_time_interval,
     get_epoch
