@@ -4,6 +4,10 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+const storage_kW_per_GiB_min = '0.0000009688';
+const storage_kW_per_GiB_est = '0.0000032212';
+const storage_kW_per_GiB_max = '0.0000086973';
+
 class StorageEnergyModelv_1_0_1 {
     constructor(pool) {
         this.code_name = 'StorageEnergyModelv_1_0_1';
@@ -36,92 +40,171 @@ class StorageEnergyModelv_1_0_1 {
 `;
     }
 
-    async NetworkQuery(formula, start, end, filter) {
+    async NetworkQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
+                with storage as(
                     SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp
+                        ROUND(AVG(cumulative_capacity)) AS total,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                                date,
+                                SUM(total) AS  cumulative_capacity
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding})
+
+                    SELECT
+                            timestamp,
+                            total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
+                            total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
+                            total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
+                        FROM storage
+                        GROUP BY timestamp, total
                         ORDER BY timestamp
-                ) q;`);
+                ;`);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] NetworkQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async MinerQuery(formula, start, end, filter, miner) {
+    async MinerQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
+                with storage as(
                     SELECT
-                        ${formula}                   AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days_v4
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner,timestamp
-                    ORDER BY timestamp
-             ) q;`);
+                        miner,
+                        ROUND(AVG(cumulative_capacity)) AS total,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                            miner,
+                                date,
+                                SUM(total) AS  cumulative_capacity
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY miner, date) q1
+                        GROUP BY miner, date ORDER BY date ${padding})
+
+                    SELECT
+                            miner,
+                            timestamp,
+                            total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
+                            total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
+                            total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
+                        FROM storage
+                        GROUP BY miner, timestamp, total
+                        ORDER BY timestamp
+                ;`);
         } catch (e) {
-            ERROR(`[StorageEnergyModel] MinerQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async VariableStorageEnergy_min(start, end, filter, miner) {
+    async CountryQuery(params) {
         var result;
+        let padding = '';
 
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000009688', start, end, filter, miner);
-        } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000009688', start, end, filter);
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
         }
 
-        return result;
-    }
+        try {
+                result = await this.pool.query(`
+                with storage as(
+                    SELECT
+                        country,
+                        ROUND(AVG(cumulative_capacity)) AS total,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                                country,
+                                date,
+                                SUM(total) AS  cumulative_capacity
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY country, date) q1
+                        GROUP BY country, date ORDER BY date ${padding})
 
-    async VariableStorageEnergy_estimate(start, end, filter, miner) {
-        var result;
-
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000032212', start, end, filter, miner);
-        } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000032212', start, end, filter);
+                    SELECT
+                            country,
+                            timestamp,
+                            total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
+                            total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
+                            total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
+                        FROM storage
+                        GROUP BY country, timestamp, total
+                        ORDER BY timestamp
+                ;`);
+        } catch (e) {
+            ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);
         }
 
-        return result;
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async VariableStorageEnergy_max(start, end, filter, miner) {
-        var result;
+    async VariableStorageEnergy(params) {
+        var query_result;
 
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000086973', start, end, filter, miner);
+        if (params.miners) {
+            query_result = await this.MinerQuery(params);
+        } else if (params.country) {
+            query_result = await this.CountryQuery(params);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000086973', start, end, filter);
+            query_result = await this.NetworkQuery(params);
         }
 
-        return result;
+        let storageEnergyData_min = [];
+        let storageEnergyData_est = [];
+        let storageEnergyData_max = [];
+
+        for (const item of query_result ) {
+            storageEnergyData_min.push({
+                value: item.storage_energy_kW_lower,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            storageEnergyData_est.push({
+                value: item.storage_energy_kW_estimate,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            storageEnergyData_max.push({
+                value: item.storage_energy_kW_upper,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
+
+        return {
+            storageEnergyData_min: storageEnergyData_min,
+            storageEnergyData_est: storageEnergyData_est,
+            storageEnergyData_max: storageEnergyData_max,
+        };
     }
 
-    async Query(id, start, end, filter, miner) {
-        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
+    async Query(id, params) {
+        INFO(`Query[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         let result = {
             id : id,
@@ -131,82 +214,64 @@ class StorageEnergyModelv_1_0_1 {
             x : this.x,
             y : this.y,
             version : this.version,
-            filter : filter,
-            miner : miner,
+            filter : params.filter,
+            miner : params.miners,
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - storage energy lower bound
-        let storageEnergyData_min = await this.VariableStorageEnergy_min(start, end, filter, miner);
-        let storageEnergyVariable_min = {
-            title: 'Lower bound',
+        // Minimum cumulative energy use
+        let storageEnergyData = await this.VariableStorageEnergy(params);
+        let storageEnergy_min = {
+            title: 'Lower Bound',
             color: COLOR.green,
-            data: storageEnergyData_min,
+            data: storageEnergyData.storageEnergyData_min,
         }
+        result.data.push(storageEnergy_min);
 
-        result.data.push(storageEnergyVariable_min);
-
-        // variable 2 - storage energy estimate
-        let storageEnergyData_est = await this.VariableStorageEnergy_estimate(start, end, filter, miner);
-        let storageEnergyVariable_est = {
+        // Estimated cumulative energy use
+        let storageEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
-            data: storageEnergyData_est,
+            data: storageEnergyData.storageEnergyData_est,
         }
+        result.data.push(storageEnergy_est);
 
-        result.data.push(storageEnergyVariable_est);
-
-        // variable 3 - storage energy upper bound
-        let storageEnergyData_max = await this.VariableStorageEnergy_max(start, end, filter, miner);
-        let storageEnergyVariable_max = {
-            title: 'Upper bound',
+        // Maximum cumulative energy use
+        let storageEnergy_max = {
+            title: 'Upper Bound',
             color: COLOR.orange,
-            data: storageEnergyData_max,
+            data: storageEnergyData.storageEnergyData_max,
         }
-
-        result.data.push(storageEnergyVariable_max);
+        result.data.push(storageEnergy_max);
 
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit, filter) {
+    async Export(id, params) {
         let data = [];
         let fields;
 
-        INFO(`Export[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+        INFO(`Export[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         try {
-                let result;
+            let query_result;
 
-                if (miner) {
-                    fields = ['miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT miner, ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                       , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                       , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                       , date_trunc('${filter}', date::date) AS timestamp \
-                    FROM fil_miner_view_days_v4 \
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
-                    GROUP BY miner, timestamp \
-                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+            if (params.miners) {
+                fields = ['miner', 'storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.MinerQuery(params);
+            } else if (params.country) {
+                fields = ['country', 'storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.CountryQuery(params);
+            } else {
+                fields = ['storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.NetworkQuery(params);
+            }
 
-                } else {
-                    fields = ['storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT ROUND(AVG(total))*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                , ROUND(AVG(total))*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                , ROUND(AVG(total))*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                , date_trunc('${filter}', date::date) AS timestamp \
-                    FROM fil_network_view_days \
-                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
-                    GROUP BY timestamp \
-                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
+            if (query_result) {
+                data = query_result;
+            }
         } catch (e) {
-            ERROR(`[StorageEnergyModel] Export error:${e}`);
+            ERROR(`[StorageEnergyModelv_1_0_1] Export error:${e}`);
         }
 
         let exportData = {
@@ -215,56 +280,11 @@ class StorageEnergyModelv_1_0_1 {
         }
 
         return exportData;
-
     }
 
-    async ResearchExport(id, start, end, miner, offset, limit) {
-        let data = [];
-        let fields;
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
-
-        try {
-                let result;
-
-                if (miner) {
-                    fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                       , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                       , total*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                       , timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
-
-                } else {
-                    fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                , total*0.0000086973 as \"storage_energy_kW_upper\" \
-                                                                , timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[StorageEnergyModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+    async ResearchExport(id, params) {
+        return this.Export(id, params);
     }
-
 }
 
 module.exports = {

@@ -4,6 +4,10 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+const sealing_kW_per_GiB_block_min = '0.00026882';
+const sealing_kW_per_GiB_block_est = '0.00152847';
+const sealing_kW_per_GiB_block_max = '0.00250540';
+
 class SealingEnergyModelv_1_0_1 {
     constructor(pool) {
         this.code_name = 'SealingEnergyModelv_1_0_1';
@@ -36,92 +40,171 @@ class SealingEnergyModelv_1_0_1 {
 `;
     }
 
-    async NetworkQuery(formula, start, end, filter) {
+    async NetworkQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
+                with sealing as(
                     SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_network_view_days
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp
+                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                                date,
+                                SUM(total_per_day) AS cumulative_total_per_day
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding})
+
+                    SELECT
+                            timestamp,
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY timestamp, total_per_day
                         ORDER BY timestamp
-                ) q;`);
+                ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async MinerQuery(formula, start, end, filter, miner) {
+    async MinerQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
+                with sealing as(
                     SELECT
-                        ${formula}                   AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                    FROM fil_miner_view_days_v4
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner,timestamp
-                    ORDER BY timestamp
-             ) q;`);
+                        miner,
+                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                                miner,
+                                date,
+                                SUM(total_per_day) AS cumulative_total_per_day
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY miner, date) q1
+                        GROUP BY miner, date ORDER BY date ${padding})
+
+                    SELECT
+                            miner,
+                            timestamp,
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY miner, timestamp, total_per_day
+                        ORDER BY timestamp
+                ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async VariableSealingEnergy_perDay_min(start, end, filter, miner) {
+    async CountryQuery(params) {
         var result;
+        let padding = '';
 
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter, miner);
-        } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter);
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
         }
 
-        return result;
-    }
+        try {
+                result = await this.pool.query(`
+                with sealing as(
+                    SELECT
+                        country,
+                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
+                        date_trunc('${params.filter}', date::date) AS timestamp
+                        FROM (
+                            SELECT
+                            country,
+                                date,
+                                SUM(total_per_day) AS cumulative_total_per_day
+                            FROM fil_miners_data_view_country_v2
+                            WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                            GROUP BY country, date) q1
+                        GROUP BY country, date ORDER BY date ${padding})
 
-    async VariableSealingEnergy_perDay_estimate(start, end, filter, miner) {
-        var result;
-
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter, miner);
-        } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter);
+                    SELECT
+                            country,
+                            timestamp,
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY country, timestamp, total_per_day
+                        ORDER BY timestamp
+                ;`);
+        } catch (e) {
+            ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);
         }
 
-        return result;
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async VariableSealingEnergy_perDay_upper(start, end, filter, miner) {
-        var result;
+    async VariableSealingEnergy(params) {
+        var query_result;
 
-        if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter, miner);
+        if (params.miners) {
+            query_result = await this.MinerQuery(params);
+        } else if (params.country) {
+            query_result = await this.CountryQuery(params);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter);
+            query_result = await this.NetworkQuery(params);
         }
 
-        return result;
+        let sealingEnergyData_min = [];
+        let sealingEnergyData_est = [];
+        let sealingEnergyData_max = [];
+
+        for (const item of query_result ) {
+            sealingEnergyData_min.push({
+                value: item.sealing_energy_kW_lower,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            sealingEnergyData_est.push({
+                value: item.sealing_energy_kW_estimate,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            sealingEnergyData_max.push({
+                value: item.sealing_energy_kW_upper,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
+
+        return {
+            sealingEnergyData_min: sealingEnergyData_min,
+            sealingEnergyData_est: sealingEnergyData_est,
+            sealingEnergyData_max: sealingEnergyData_max,
+        };
     }
 
-    async Query(id, start, end, filter, miner) {
-        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
+    async Query(id, params) {
+        INFO(`Query[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         let result = {
             id : id,
@@ -131,85 +214,65 @@ class SealingEnergyModelv_1_0_1 {
             x : this.x,
             y : this.y,
             version : this.version,
-            filter : filter,
-            miner : miner,
+            filter : params.filter,
+            miner : params.miners,
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        // variable 1 - Lower bound on sealing energy, averaged over one day
-        let sealingE_min = await this.VariableSealingEnergy_perDay_min(start, end, filter, miner);
-        let sealingEVariable_min = {
-            title: 'Lower bound',
+        // Minimum cumulative energy use
+        let sealingEnergyData = await this.VariableSealingEnergy(params);
+        let sealingEnergy_min = {
+            title: 'Lower Bound',
             color: COLOR.green,
-            data: sealingE_min,
+            data: sealingEnergyData.sealingEnergyData_min,
         }
+        result.data.push(sealingEnergy_min);
 
-        result.data.push(sealingEVariable_min);
-
-        // variable 2 - Estimated sealing energy, averaged over one day
-        let sealingE_est = await this.VariableSealingEnergy_perDay_estimate(start, end, filter, miner);
-        let sealingEVariable_est = {
+        // Estimated cumulative energy use
+        let sealingEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
-            data: sealingE_est,
+            data: sealingEnergyData.sealingEnergyData_est,
         }
+        result.data.push(sealingEnergy_est);
 
-        result.data.push(sealingEVariable_est);
-
-        // variable 3 - Upper bound on sealing energy, averaged over one day
-        let sealingE_max = await this.VariableSealingEnergy_perDay_upper(start, end, filter, miner);
-        let sealingEVariable_max = {
-            title: 'Upper bound',
+        // Maximum cumulative energy use
+        let sealingEnergy_max = {
+            title: 'Upper Bound',
             color: COLOR.orange,
-            data: sealingE_max,
+            data: sealingEnergyData.sealingEnergyData_max,
         }
-
-        result.data.push(sealingEVariable_max);
+        result.data.push(sealingEnergy_max);
 
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit, filter) {
+
+    async Export(id, params) {
         let data = [];
         let fields;
 
-        INFO(`Export[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+        INFO(`Export[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         try {
-                let result;
+            let query_result;
 
-                if (miner) {
-                    fields = ['miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT miner \
-                                        , ROUND(AVG(total_per_day))*0.00026882 as \"sealing_energy_kW_lower\" \
-                                        , ROUND(AVG(total_per_day))*0.00152847 as \"sealing_energy_kW_estimate\" \
-                                        , ROUND(AVG(total_per_day))*0.00250540 as \"sealing_energy_kW_upper\" \
-                                        , date_trunc('${filter}', date::date) AS timestamp \
-                    FROM fil_miner_view_days_v4 \
-                    WHERE (miner='${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
-                    GROUP BY miner, timestamp \
-                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
+            if (params.miners) {
+                fields = ['miner', 'sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.MinerQuery(params);
+            } else if (params.country) {
+                fields = ['country', 'sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.CountryQuery(params);
+            } else {
+                fields = ['sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
+                query_result = await this.NetworkQuery(params);
+            }
 
-                } else {
-                    fields = ['sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT \
-                                                      ROUND(AVG(total_per_day))*0.00026882 as \"sealing_energy_kW_lower\" \
-                                                    , ROUND(AVG(total_per_day))*0.00152847 as \"sealing_energy_kW_estimate\" \
-                                                    , ROUND(AVG(total_per_day))*0.00250540 as \"sealing_energy_kW_upper\" \
-                                                    , date_trunc('${filter}', date::date) AS timestamp \
-                    FROM fil_network_view_days \
-                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date) \
-                    GROUP BY timestamp \
-                    ORDER BY timestamp LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
+            if (query_result) {
+                data = query_result;
+            }
         } catch (e) {
-            ERROR(`[StorageEnergyModel] Export error:${e}`);
+            ERROR(`[SealingEnergyModelv_1_0_1] Export error:${e}`);
         }
 
         let exportData = {
@@ -218,55 +281,10 @@ class SealingEnergyModelv_1_0_1 {
         }
 
         return exportData;
-
     }
 
-    async ResearchExport(id, start, end, miner, offset, limit) {
-        let data = [];
-        let fields;
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
-
-        try {
-                let result;
-
-                if (miner) {
-                    fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
-                                                                       , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
-                                                                       , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
-                                                                       , timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
-
-                } else {
-                    fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
-                                                                , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
-                                                                , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
-                                                                , timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
-                    ORDER BY epoch LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[StorageEnergyModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+    async ResearchExport(id, params) {
+        return this.Export(id, params);
     }
 
 }

@@ -36,21 +36,26 @@ class CapacityModel {
 
     async NetworkQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
-                result = await this.pool.query(`
+            result = await this.pool.query(`
                 SELECT
-                ROUND(AVG(value)) as value,
+                ROUND(AVG(cumulative_capacity)) as \"capacity_GiB\",
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(total) AS value,
+                        SUM(total) AS cumulative_capacity,
                         date
                     FROM fil_miners_data_view_country_v2
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
-             ) q GROUP BY start_date ORDER BY start_date;
-                `);
+             ) q GROUP BY start_date ORDER BY start_date  ${padding};
+            `);
         } catch (e) {
             ERROR(`[CapacityModel] NetworkQuery error:${e}`);
         }
@@ -60,21 +65,28 @@ class CapacityModel {
 
     async MinerQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
-                result = await this.pool.query(`
+            result = await this.pool.query(`
                 SELECT
-                value,
-                timestamp AS start_date
+                miner,
+                ROUND(AVG(cumulative_capacity)) as \"capacity_GiB\",
+                date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        ROUND(AVG(total))                   AS value,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        miner,
+                        SUM(total) AS cumulative_capacity,
+                        date
                     FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp
-                    ORDER BY timestamp
-             ) q;`);
+                    GROUP BY  miner, date
+             ) q GROUP BY miner, start_date ORDER BY start_date  ${padding};
+            `);
         } catch (e) {
             ERROR(`[CapacityModel] MinerQuery error:${e}`);
         }
@@ -84,21 +96,28 @@ class CapacityModel {
 
     async CountryQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
             result = await this.pool.query(`
                 SELECT
-                ROUND(AVG(value)) as value,
+                country,
+                ROUND(AVG(cumulative_capacity)) as \"capacity_GiB\",
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(total) AS value,
+                    country,
+                        SUM(total) AS cumulative_capacity,
                         date
                     FROM fil_miners_data_view_country_v2
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY country, date
-             ) q GROUP BY start_date ORDER BY start_date;
-             `);
+                    GROUP BY  country, date
+             ) q GROUP BY country, start_date ORDER BY start_date  ${padding};
+            `);
         } catch (e) {
             ERROR(`[CapacityModel] CountryQuery error:${e}`);
         }
@@ -107,17 +126,27 @@ class CapacityModel {
     }
 
     async VariableTotalCapacity(params) {
-        var result;
+        var query_result;
 
         if (params.miners) {
-            result = await this.MinerQuery(params);
+            query_result = await this.MinerQuery(params);
         } else if (params.country) {
-            result = await this.CountryQuery(params);
+            query_result = await this.CountryQuery(params);
         } else {
-            result = await this.NetworkQuery(params);
+            query_result = await this.NetworkQuery(params);
         }
 
-        return result;
+        let capacityData = [];
+      
+        for (const item of query_result ) {
+            capacityData.push({
+                value: item.capacity_GiB,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
+
+        return capacityData;
     }
 
     async Query(id, params) {
@@ -156,55 +185,22 @@ class CapacityModel {
         INFO(`Export[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         try {
-                let result;
+            let query_result;
 
-                if (params.miners) {
-                    fields = ['miner','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT miner, \
-                    ROUND(AVG(total)) as \"capacity_GiB\", \
-                    date_trunc('${params.filter}', date::date) AS timestamp \
-                    FROM fil_miners_data_view_country_v2 \
-                    WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
-                    GROUP BY miner,timestamp \
-                    ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
-                } else if (params.country) {
-                    fields = ['country','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`                
-                    SELECT
-                    country,
-                    ROUND(AVG(value)) as capacity_GiB,
-                    date_trunc('${params.filter}', date::date) AS timestamp
-                    FROM (
-                        SELECT
-                            country,
-                            SUM(total) AS value,
-                            date
-                        FROM fil_miners_data_view_country_v2
-                        WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                        GROUP BY country, date
-                 ) q GROUP BY country,timestamp
-                    ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
-                } else {
-                    fields = ['capacity_GiB', 'timestamp'];
-                    result = await this.pool.query(`
-                    SELECT
-                    ROUND(AVG(value)) as capacity_GiB,
-                    date_trunc('${params.filter}', date::date) AS timestamp
-                    FROM (
-                        SELECT
-                            SUM(total) AS value,
-                            date
-                        FROM fil_miners_data_view_country_v2
-                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                        GROUP BY date
-                 ) q GROUP BY timestamp
-                    ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
-                }
+            if (params.miners) {
+                fields = ['miner', 'capacity_GiB', 'start_date', 'end_date'];
+                query_result = await this.MinerQuery(params);
+            } else if (params.country) {
+                fields = ['country', 'capacity_GiB', 'start_date', 'end_date'];
+                query_result = await this.CountryQuery(params);
+            } else {
+                fields = ['capacity_GiB', 'start_date', 'end_date'];
+                query_result = await this.NetworkQuery(params);
+            }
 
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
+            if (query_result) {
+                data = query_result;
+            }
         } catch (e) {
             ERROR(`[CapacityModel] Export error:${e}`);
         }
@@ -215,7 +211,6 @@ class CapacityModel {
         }
 
         return exportData;
-
     }
 
     async ResearchExport(id, params) {

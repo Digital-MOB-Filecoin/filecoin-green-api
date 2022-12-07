@@ -61,14 +61,14 @@ class EnergyIntensityModel {
                 result = await this.pool.query(`
                 with sealing as(
                     SELECT
-                        ROUND(AVG(network_total_per_day)) AS sealing_added_GiB,
-                        ROUND(AVG(network_capacity)) AS capacity,
+                        ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
+                        ROUND(AVG(cumulative_capacity)) AS capacity,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
                                 date,
-                                SUM(total_per_day) AS network_total_per_day,
-                                SUM(total) AS  network_capacity
+                                SUM(total_per_day) AS cumulative_total_per_day,
+                                SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
@@ -109,15 +109,15 @@ class EnergyIntensityModel {
                   with sealing as(
                     SELECT
                         miner,
-                        ROUND(AVG(network_total_per_day)) AS sealing_added_GiB,
-                        ROUND(AVG(network_capacity)) AS capacity,
+                        ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
+                        ROUND(AVG(cumulative_capacity)) AS capacity,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
                                 miner,
                                 date,
-                                SUM(total_per_day) AS network_total_per_day,
-                                SUM(total) AS  network_capacity
+                                SUM(total_per_day) AS cumulative_total_per_day,
+                                SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY miner,date) q1
@@ -160,15 +160,15 @@ class EnergyIntensityModel {
                   with sealing as(
                     SELECT
                         country,
-                        ROUND(AVG(network_total_per_day)) AS sealing_added_GiB,
-                        ROUND(AVG(network_capacity)) AS capacity,
+                        ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
+                        ROUND(AVG(cumulative_capacity)) AS capacity,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
                                 country,
                                 date,
-                                SUM(total_per_day) AS network_total_per_day,
-                                SUM(total) AS  network_capacity
+                                SUM(total_per_day) AS cumulative_total_per_day,
+                                SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY country, date) q1
