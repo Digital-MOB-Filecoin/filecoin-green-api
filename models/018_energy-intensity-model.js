@@ -63,7 +63,7 @@ class EnergyIntensityModel {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
                         ROUND(AVG(cumulative_capacity)) AS capacity,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -79,14 +79,14 @@ class EnergyIntensityModel {
                         capacity as stored_GiB,
                         coalesce(sealing_added_GiB,0) as sealing_added_GiB,
                         coalesce(capacity,0) as capacity,
-                        timestamp
+                        start_date
                       FROM sealing )
         
                   SELECT
                   COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_lower",
                   COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_estimate",
                   COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_upper",
-                    timestamp AS start_date
+                    start_date
                   FROM total_metrics
              `);
         } catch (e) {
@@ -110,7 +110,7 @@ class EnergyIntensityModel {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
                         ROUND(AVG(cumulative_capacity)) AS capacity,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -126,14 +126,14 @@ class EnergyIntensityModel {
                         capacity as stored_GiB,
                         coalesce(sealing_added_GiB,0) as sealing_added_GiB,
                         coalesce(capacity,0) as capacity,
-                        timestamp
+                        start_date
                       FROM sealing )
         
                   SELECT
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_lower",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_estimate",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_upper",
-                    timestamp AS start_date
+                    start_date
                   FROM total_metrics
              `);
         } catch (e) {
@@ -158,7 +158,7 @@ class EnergyIntensityModel {
                         country,
                         ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
                         ROUND(AVG(cumulative_capacity)) AS capacity,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 country,
@@ -176,7 +176,7 @@ class EnergyIntensityModel {
                         capacity as stored_GiB,
                         coalesce(sealing_added_GiB,0) as sealing_added_GiB,
                         coalesce(capacity,0) as capacity,
-                        timestamp
+                        start_date
                       FROM sealing )
         
                   SELECT
@@ -184,7 +184,7 @@ class EnergyIntensityModel {
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_lower",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_estimate",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_upper",
-                    timestamp AS start_date
+                    start_date
                   FROM total_metrics
 
              `);

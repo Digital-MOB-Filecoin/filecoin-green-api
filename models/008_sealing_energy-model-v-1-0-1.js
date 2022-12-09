@@ -53,7 +53,7 @@ class SealingEnergyModelv_1_0_1 {
                 with sealing as(
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -64,13 +64,13 @@ class SealingEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
                         FROM sealing
-                        GROUP BY timestamp, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
@@ -92,7 +92,7 @@ class SealingEnergyModelv_1_0_1 {
                 with sealing as(
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -103,13 +103,13 @@ class SealingEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
                         FROM sealing
-                        GROUP BY timestamp, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
@@ -132,7 +132,7 @@ class SealingEnergyModelv_1_0_1 {
                     SELECT
                         country,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                             country,
@@ -145,13 +145,13 @@ class SealingEnergyModelv_1_0_1 {
 
                     SELECT
                             country,
-                            timestamp,
+                            start_date,
                             total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
                         FROM sealing
-                        GROUP BY country, timestamp, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY country, start_date, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);

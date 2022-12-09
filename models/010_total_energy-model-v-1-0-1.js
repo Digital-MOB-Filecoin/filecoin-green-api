@@ -62,7 +62,7 @@ class TotalEnergyModelv_1_0_1 {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -74,13 +74,13 @@ class TotalEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
                             (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
                             (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
                         FROM storage
-                        GROUP BY timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[totalEnergyModel] NetworkQuery error:${e}`);
@@ -103,7 +103,7 @@ class TotalEnergyModelv_1_0_1 {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -115,13 +115,13 @@ class TotalEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
                             (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
                             (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
                         FROM storage
-                        GROUP BY timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[totalEnergyModel] MinerQuery error:${e}`);
@@ -145,7 +145,7 @@ class TotalEnergyModelv_1_0_1 {
                         country,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                             country,
@@ -159,13 +159,13 @@ class TotalEnergyModelv_1_0_1 {
 
                     SELECT
                             country,
-                            timestamp,
+                            start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
                             (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
                             (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
                         FROM storage
-                        GROUP BY country, timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY country, start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[totalEnergyModel] CountryQuery error:${e}`);

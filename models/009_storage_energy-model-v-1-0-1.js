@@ -53,7 +53,7 @@ class StorageEnergyModelv_1_0_1 {
                 with storage as(
                     SELECT
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -64,13 +64,13 @@ class StorageEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
                             total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
                             total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
                         FROM storage
-                        GROUP BY timestamp, total
-                        ORDER BY timestamp
+                        GROUP BY start_date, total
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
@@ -92,7 +92,7 @@ class StorageEnergyModelv_1_0_1 {
                 with storage as(
                     SELECT
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -103,13 +103,13 @@ class StorageEnergyModelv_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
+                            start_date,
                             total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
                             total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
                             total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
                         FROM storage
-                        GROUP BY timestamp, total
-                        ORDER BY timestamp
+                        GROUP BY start_date, total
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
@@ -132,7 +132,7 @@ class StorageEnergyModelv_1_0_1 {
                     SELECT
                         country,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 country,
@@ -145,13 +145,13 @@ class StorageEnergyModelv_1_0_1 {
 
                     SELECT
                             country,
-                            timestamp,
+                            start_date,
                             total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
                             total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
                             total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
                         FROM storage
-                        GROUP BY country, timestamp, total
-                        ORDER BY timestamp
+                        GROUP BY country, start_date, total
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);
