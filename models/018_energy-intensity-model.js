@@ -108,24 +108,21 @@ class EnergyIntensityModel {
                 result = await this.pool.query(`
                   with sealing as(
                     SELECT
-                        miner,
                         ROUND(AVG(cumulative_total_per_day)) AS sealing_added_GiB,
                         ROUND(AVG(cumulative_capacity)) AS capacity,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
-                                miner,
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY miner,date) q1
-                        GROUP BY miner,date ORDER BY date ${padding}),
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding}),
         
                   total_metrics as (
                       SELECT
-                        miner,
                         capacity as stored_GiB,
                         coalesce(sealing_added_GiB,0) as sealing_added_GiB,
                         coalesce(capacity,0) as capacity,
@@ -133,7 +130,6 @@ class EnergyIntensityModel {
                       FROM sealing )
         
                   SELECT
-                    miner,
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_min} + sealing_added_GiB*${sealing_kW_per_GiB_block_min}) * ${pue_min} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_lower",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_est} + sealing_added_GiB*${sealing_kW_per_GiB_block_est}) * ${pue_est} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_estimate",
                     COALESCE(( ( (stored_GiB*${storage_kW_per_GiB_max} + sealing_added_GiB*${sealing_kW_per_GiB_block_max}) * ${pue_max} ) / NULLIF(capacity,0)),0) * ${MW_per_EiB_coeff} AS "total_energy_MW_per_EiB_upper",
@@ -297,7 +293,7 @@ class EnergyIntensityModel {
                 let query_result;
 
                 if (params.miners) {
-                    fields = ['miner','total_energy_MW_per_EiB_lower','total_energy_MW_per_EiB_estimate','total_energy_MW_per_EiB_upper','start_date', 'end_date'];
+                    fields = ['total_energy_MW_per_EiB_lower','total_energy_MW_per_EiB_estimate','total_energy_MW_per_EiB_upper','start_date', 'end_date'];
                     query_result = await this.MinerQuery(params); 
                 } else if (params.country) {
                     fields = ['country','total_energy_MW_per_EiB_lower','total_energy_MW_per_EiB_estimate','total_energy_MW_per_EiB_upper','start_date', 'end_date'];

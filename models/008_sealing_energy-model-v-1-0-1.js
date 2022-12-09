@@ -91,27 +91,24 @@ class SealingEnergyModelv_1_0_1 {
                 result = await this.pool.query(`
                 with sealing as(
                     SELECT
-                        miner,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
-                                miner,
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day
                             FROM fil_miners_data_view_country_v2
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY miner, date) q1
-                        GROUP BY miner, date ORDER BY date ${padding})
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            miner,
                             timestamp,
                             total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
                             total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
                         FROM sealing
-                        GROUP BY miner, timestamp, total_per_day
+                        GROUP BY timestamp, total_per_day
                         ORDER BY timestamp
                 ;`);
         } catch (e) {
@@ -258,7 +255,7 @@ class SealingEnergyModelv_1_0_1 {
             let query_result;
 
             if (params.miners) {
-                fields = ['miner', 'sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
+                fields = ['sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
                 fields = ['country', 'sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];

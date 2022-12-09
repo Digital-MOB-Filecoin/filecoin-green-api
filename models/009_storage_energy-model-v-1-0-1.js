@@ -91,27 +91,24 @@ class StorageEnergyModelv_1_0_1 {
                 result = await this.pool.query(`
                 with storage as(
                     SELECT
-                        miner,
                         ROUND(AVG(cumulative_capacity)) AS total,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
-                            miner,
                                 date,
                                 SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY miner, date) q1
-                        GROUP BY miner, date ORDER BY date ${padding})
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            miner,
                             timestamp,
                             total * ${storage_kW_per_GiB_min} as \"storage_energy_kW_lower\" ,
                             total * ${storage_kW_per_GiB_est}  as \"storage_energy_kW_estimate\" ,
                             total * ${storage_kW_per_GiB_max}  as \"storage_energy_kW_upper\" 
                         FROM storage
-                        GROUP BY miner, timestamp, total
+                        GROUP BY timestamp, total
                         ORDER BY timestamp
                 ;`);
         } catch (e) {
@@ -257,7 +254,7 @@ class StorageEnergyModelv_1_0_1 {
             let query_result;
 
             if (params.miners) {
-                fields = ['miner', 'storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];
+                fields = ['storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
                 fields = ['country', 'storage_energy_kW_lower', 'storage_energy_kW_estimate', 'storage_energy_kW_upper', 'start_date', 'end_date'];

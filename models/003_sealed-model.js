@@ -75,19 +75,17 @@ class SealedModel {
         try {
             result = await this.pool.query(`
                 SELECT
-                    miner,
                     ROUND(AVG(cumulative_total_per_day)) as \"sealed_GiB\",
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                    miner,
                         SUM(total_per_day) AS cumulative_total_per_day,
                         date
                     FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY miner, date
+                    GROUP BY date
                 ) q 
-                GROUP BY miner, start_date ORDER BY start_date  ${padding};
+                GROUP BY start_date ORDER BY start_date  ${padding};
         `);
         } catch (e) {
             ERROR(`[SealedModel] MinerQuery error:${e}`);
@@ -191,7 +189,7 @@ class SealedModel {
             let query_result;
 
             if (params.miners) {
-                fields = ['miner', 'sealed_GiB', 'start_date', 'end_date'];
+                fields = ['sealed_GiB', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
                 fields = ['country', 'sealed_GiB', 'start_date', 'end_date'];

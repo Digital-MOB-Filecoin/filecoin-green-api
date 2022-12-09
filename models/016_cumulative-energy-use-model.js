@@ -100,29 +100,26 @@ class CumulativeEnergyModel_v_1_0_1 {
                 result = await this.pool.query(`
                 with sealing as(
                     SELECT
-                        miner,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
                         date_trunc('${params.filter}', date::date) AS timestamp
                         FROM (
                             SELECT
-                                miner,
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
                             FROM fil_miners_data_view_country_v2
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY miner,date) q1
-                        GROUP BY miner,date ORDER BY date ${padding})
+                            GROUP BY date) q1
+                        GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            miner,
                             timestamp,
                             SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY timestamp) as \"energy_use_kW_lower\" ,
                             SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY timestamp) as \"energy_use_kW_estimate\" ,
                             SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY timestamp) as \"energy_use_kW_upper\" 
                         FROM sealing
-                        GROUP BY miner, timestamp, total, total_per_day
+                        GROUP BY timestamp, total, total_per_day
                         ORDER BY timestamp
                 ;`);
         } catch (e) {
@@ -270,7 +267,7 @@ class CumulativeEnergyModel_v_1_0_1 {
             let query_result;
 
             if (params.miners) {
-                fields = ['miner', 'energy_use_kW_lower', 'energy_use_kW_estimate', 'energy_use_kW_upper', 'start_date', 'end_date'];
+                fields = ['energy_use_kW_lower', 'energy_use_kW_estimate', 'energy_use_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
                 fields = ['country', 'energy_use_kW_lower', 'energy_use_kW_estimate', 'energy_use_kW_upper', 'start_date', 'end_date'];

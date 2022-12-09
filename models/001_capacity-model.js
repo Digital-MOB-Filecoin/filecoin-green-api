@@ -74,18 +74,16 @@ class CapacityModel {
         try {
             result = await this.pool.query(`
                 SELECT
-                miner,
                 ROUND(AVG(cumulative_capacity)) as \"capacity_GiB\",
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        miner,
                         SUM(total) AS cumulative_capacity,
                         date
                     FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY  miner, date
-             ) q GROUP BY miner, start_date ORDER BY start_date  ${padding};
+                    GROUP BY  date
+             ) q GROUP BY start_date ORDER BY start_date  ${padding};
             `);
         } catch (e) {
             ERROR(`[CapacityModel] MinerQuery error:${e}`);
@@ -188,7 +186,7 @@ class CapacityModel {
             let query_result;
 
             if (params.miners) {
-                fields = ['miner', 'capacity_GiB', 'start_date', 'end_date'];
+                fields = ['capacity_GiB', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
                 fields = ['country', 'capacity_GiB', 'start_date', 'end_date'];
