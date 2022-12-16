@@ -43,12 +43,17 @@ class RenewableEnergyModel {
                 result = await this.pool.query(`
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
-                    date_trunc('${params.filter}', date::date) AS timestamp
+                    date
                     FROM fil_miners_data_view_country_v2
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp, date, renewable_energy_kw
-                    ORDER BY timestamp ${padding}),
-                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    GROUP BY date, date, renewable_energy_kw
+                    ORDER BY date ${padding}),
+                    datapoints as (
+                        SELECT 
+                        ROUND(AVG(\"energykWh\")) as "energykWh\", 
+                        date_trunc('${params.filter}', date::date) AS start_date
+                        FROM data
+                        GROUP BY date)
                     SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
@@ -70,12 +75,17 @@ class RenewableEnergyModel {
                 result = await this.pool.query(`
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
-                    date_trunc('${params.filter}', date::date) AS timestamp
+                    date
                     FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp, date, renewable_energy_kw
-                    ORDER BY timestamp ${padding}),
-                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    GROUP BY date, renewable_energy_kw
+                    ORDER BY date ${padding}),
+                    datapoints as (
+                        SELECT 
+                        ROUND(AVG(\"energykWh\")) as "energykWh\", 
+                        date_trunc('${params.filter}', date::date) AS start_date
+                        FROM data
+                        GROUP BY date)
                     SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                 `);
         } catch (e) {
@@ -97,12 +107,17 @@ class RenewableEnergyModel {
                 result = await this.pool.query(`
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
-                    date_trunc('${params.filter}', date::date) AS timestamp
+                    date
                     FROM fil_miners_data_view_country_v2
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp, date, renewable_energy_kw
-                    ORDER BY timestamp ${padding}),
-                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    GROUP BY date, date, renewable_energy_kw
+                    ORDER BY date ${padding}),
+                    datapoints as (
+                        SELECT 
+                        ROUND(AVG(\"energykWh\")) as "energykWh\", 
+                        date_trunc('${params.filter}', date::date) AS start_date
+                        FROM data
+                        GROUP BY date)
                     SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
