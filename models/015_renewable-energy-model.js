@@ -33,18 +33,23 @@ class RenewableEnergyModel {
 
     async NetworkQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
                 with data as (SELECT
-                    SUM(energyWh / 1000) OVER(ORDER BY date) AS value,
+                    SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
                     date_trunc('${params.filter}', date::date) AS timestamp
-                    FROM fil_renewable_energy_view_v3
+                    FROM fil_miners_data_view_country_v2
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp, date, energywh
-                    ORDER BY timestamp),
-                    datapoints as (SELECT value, timestamp AS start_date FROM data)
-                    SELECT DISTINCT start_date, value FROM datapoints ORDER BY start_date;
+                    GROUP BY timestamp, date, renewable_energy_kw
+                    ORDER BY timestamp ${padding}),
+                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] NetworkQuery error:${e}`);
@@ -55,21 +60,24 @@ class RenewableEnergyModel {
 
     async MinerQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                value,
-                timestamp AS start_date
-                FROM (
-                    SELECT
-                         SUM(energyWh / 1000) OVER(ORDER BY date)                   AS value,
-                        date_trunc('${params.filter}', date::date) AS timestamp
-                    FROM fil_renewable_energy_view_v3
+                with data as (SELECT
+                    SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
+                    date_trunc('${params.filter}', date::date) AS timestamp
+                    FROM fil_miners_data_view_country_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY timestamp,energywh, date
-                    ORDER BY timestamp
-             ) q;`);
+                    GROUP BY timestamp, date, renewable_energy_kw
+                    ORDER BY timestamp ${padding}),
+                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
+                `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] MinerQuery error:${e}`);
         }
@@ -79,21 +87,24 @@ class RenewableEnergyModel {
 
     async CountryQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
-                SELECT
-                ROUND(AVG(value)) as value,
-                date_trunc('${params.filter}', date::date) AS start_date
-                FROM (
-                    SELECT
-                        SUM(renewable_energy_kW / 1000) AS value,
-                        date
+                with data as (SELECT
+                    SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
+                    date_trunc('${params.filter}', date::date) AS timestamp
                     FROM fil_miners_data_view_country_v2
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY country, date
-                    ORDER BY date
-             ) q GROUP BY start_date ORDER BY start_date;`);
+                    GROUP BY timestamp, date, renewable_energy_kw
+                    ORDER BY timestamp ${padding}),
+                    datapoints as (SELECT \"energykWh\", timestamp AS start_date FROM data)
+                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
+                    `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] MinerQuery error:${e}`);
         }
@@ -102,17 +113,27 @@ class RenewableEnergyModel {
     }
 
     async VariableRenewableEnergy(params) {
-        var result;
+        var query_result;
 
         if (params.miners) {
-            result = await this.MinerQuery(params);
+            query_result = await this.MinerQuery(params);
         } else if (params.country) {
-            result = await this.CountryQuery(params);
+            query_result = await this.CountryQuery(params);
         } else {
-            result = await this.NetworkQuery(params);
+            query_result = await this.NetworkQuery(params);
         }
 
-        return result;
+        let renewableEnergyData = [];
+      
+        for (const item of query_result ) {
+            renewableEnergyData.push({
+                value: item.energykWh,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
+
+        return renewableEnergyData;
     }
 
     async Query(id, params) {
@@ -151,38 +172,24 @@ class RenewableEnergyModel {
         INFO(`Export[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         try {
-                let result;
+            let query_result;
 
-                if (params.miners) {
-                    fields = ['miner','energykWh','timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('${params.filter}', date::date) AS timestamp \
-                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energykWh\" \
-                    FROM fil_renewable_energy_view_v3 \
-                    WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
-                    ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
+            if (params.miners) {
+                fields = ['energykWh', 'start_date', 'end_date'];
+                query_result = await this.MinerQuery(params);
+            } else if (params.country) {
+                fields = ['energykWh', 'start_date', 'end_date'];
+                query_result = await this.CountryQuery(params);
+            } else {
+                fields = ['energykWh', 'start_date', 'end_date'];
+                query_result = await this.NetworkQuery(params);
+            }
 
-                } else {
-                    fields = ['energykWh','timestamp'];
-                    result = await this.pool.query(`
-                    with data as (SELECT
-                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energykWh\",
-                        date_trunc('${params.filter}', date::date) AS timestamp
-                        FROM fil_renewable_energy_view_v3
-                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                        GROUP BY timestamp, date, energyWh
-                        ORDER BY timestamp),
-                        datapoints as (SELECT \"energykWh\", timestamp FROM data)
-                        SELECT DISTINCT timestamp, \"energykWh\" FROM datapoints ORDER BY timestamp
-                        LIMIT ${params.limit} OFFSET ${params.offset}`);
-                }
-
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
+            if (query_result) {
+                data = query_result;
+            }
         } catch (e) {
-            ERROR(`[RenewableEnergyModel] Export error:${e}`);
+            ERROR(`[CapacityModel] Export error:${e}`);
         }
 
         let exportData = {
@@ -191,56 +198,10 @@ class RenewableEnergyModel {
         }
 
         return exportData;
-
     }
 
     async ResearchExport(id, params) {
-        let data = [];
-        let fields;
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
-
-        try {
-                let result;
-
-                if (params.miners) {
-                    fields = ['miner','energykWh','timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('day', date::date) AS timestamp \
-                    , SUM(energyWh / 1000) OVER(ORDER BY date) as \"energykWh\" \
-                    FROM fil_renewable_energy_view_v3 \
-                    WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date) \
-                    ORDER BY timestamp LIMIT ${params.limit} OFFSET ${params.offset}`);
-
-                } else {
-                    fields = ['energykWh','timestamp'];
-                    result = await this.pool.query(`
-                    with data as (SELECT
-                        SUM(energyWh / 1000) OVER(ORDER BY date) AS \"energykWh\",
-                        date_trunc('day', date::date) AS timestamp
-                        FROM fil_renewable_energy_view_v3
-                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                        GROUP BY timestamp, date, energyWh
-                        ORDER BY timestamp),
-                        datapoints as (SELECT \"energykWh\", timestamp FROM data)
-                        SELECT DISTINCT timestamp, \"energykWh\" FROM datapoints ORDER BY timestamp
-                        LIMIT ${params.limit} OFFSET ${params.offset}`);
-                }
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[RenewableEnergyModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+        return this.Export(id, params);
     }
 
 }
