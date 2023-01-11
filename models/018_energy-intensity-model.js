@@ -69,7 +69,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v2
+                            FROM fil_miners_data_view_country_v3
                             WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding}),
@@ -116,7 +116,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v2
+                            FROM fil_miners_data_view_country_v3
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding}),
@@ -165,7 +165,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v2
+                            FROM fil_miners_data_view_country_v3
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY country, date) q1
                         GROUP BY country, date ORDER BY date ${padding}),
