@@ -12,7 +12,7 @@ function error_response(code, msg, res) {
 // GET
 const MapList = async function (req, res, next) {
     try {
-        var result = await pool.query('SELECT country, count(miner) as storage_providers FROM fil_location_view GROUP BY country ORDER BY storage_providers DESC;');
+        var result = await pool.query('SELECT * FROM fil_map_view;');
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list]: ${JSON.stringify(result.rows.length)} datapoints`);

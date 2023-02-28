@@ -64,7 +64,7 @@ class Models {
         this.Register(renewableEnergyModel);          //Cumulative renewable energy purchases
 
         this.Register(totalEmissionsModel);                   //Total emissions 
-        //this.Register(totalEmissionsWithRenewableFloorModel); //Total emissions with renewable (floor)
+        this.Register(totalEmissionsWithRenewableFloorModel); //Total emissions with renewable (floor)
         this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
         
         this.Register(energyIntensityModel);          //Energy Intensity

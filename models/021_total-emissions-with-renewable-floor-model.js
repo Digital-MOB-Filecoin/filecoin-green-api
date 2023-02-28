@@ -31,70 +31,149 @@ class TotalEmissionsWithRenewableFloorModel {
         return `Total amount of emissions during a time period gCO2`;
     }
 
-    async NetworkQuery(start, end, filter, formula) {
+    async NetworkQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
                 result = await this.pool.query(`
                 SELECT
-                value,
-                timestamp AS start_date
+                    ROUND(SUM(SUM(cumulative_emissions_lower)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_lower\",
+                    ROUND(SUM(SUM(cumulative_emissions_estimate)) over (ORDER by date_trunc('${params.filter}', date::date)))  as \"emissions_estimate\",
+                    ROUND(SUM(SUM(cumulative_emissions_upper)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_upper\",
+                    date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_miners_data_view
-                        WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY timestamp
-                        ORDER BY timestamp
-                ) q;
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        date
+                    FROM fil_miners_data_view_country_v3
+                    WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                    GROUP BY date
+             ) q GROUP BY start_date ORDER BY start_date  ${padding};
                 `);
         } catch (e) {
             ERROR(`[TotalEmissionsWithRenewableFloorModel] NetworkQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async MinerQuery(start, end, filter, miner, formula) {
+    async CountryQuery(params) {
         var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
 
         try {
             result = await this.pool.query(`
-            SELECT
-                value,
-                timestamp AS start_date
+                SELECT
+                country,
+                ROUND(SUM(SUM(cumulative_emissions_lower)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_lower\",
+                ROUND(SUM(SUM(cumulative_emissions_estimate)) over (ORDER by date_trunc('${params.filter}', date::date)))  as \"emissions_estimate\",
+                ROUND(SUM(SUM(cumulative_emissions_upper)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_upper\",
+                date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        ${formula}                             AS value,
-                        date_trunc('${filter}', date::date) AS timestamp
-                        FROM fil_miners_data_view
-                        WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                        GROUP BY miner, timestamp
-                        ORDER BY timestamp
-                ) q;
-         `);
+                        country,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        date
+                    FROM fil_miners_data_view_country_v3
+                    WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                    GROUP BY country, date
+             ) q GROUP BY country, start_date ORDER BY start_date  ${padding};
+            `);
+        } catch (e) {
+            ERROR(`[TotalEmissionsWithRenewableFloorModel] CountryQuery error:${e}`);
+        }
+
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
+    }
+
+    async MinerQuery(params) {
+        var result;
+        let padding = '';
+
+        if (params.offset && params.limit) {
+            padding = `LIMIT ${params.limit} OFFSET ${params.offset}`;
+        }
+
+        try {
+            result = await this.pool.query(`
+                SELECT
+                ROUND(SUM(SUM(cumulative_emissions_lower)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_lower\",
+                ROUND(SUM(SUM(cumulative_emissions_estimate)) over (ORDER by date_trunc('${params.filter}', date::date)))  as \"emissions_estimate\",
+                ROUND(SUM(SUM(cumulative_emissions_upper)) over (ORDER by date_trunc('${params.filter}', date::date))) as \"emissions_upper\",
+                date_trunc('${params.filter}', date::date) AS start_date
+                FROM (
+                    SELECT
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        date
+                    FROM fil_miners_data_view_country_v3
+                    WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                    GROUP BY  date
+             ) q GROUP BY start_date ORDER BY start_date  ${padding};
+            `);
         } catch (e) {
             ERROR(`[TotalEmissionsWithRenewableFloorModel] MinerQuery error:${e}`);
         }
 
-        return add_time_interval(start, end, filter, result.rows);
+        return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
 
-    async VariableEmissions(start, end, filter, miner, field) {
-        var result;
+    async VariableEmissions(params) {
+        var query_result;
 
-        if (miner) {
-            result = await this.MinerQuery(start, end, filter, miner, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
+        if (params.miners) {
+            query_result = await this.MinerQuery(params);
+        } else if (params.country) {
+            query_result = await this.CountryQuery(params);
         } else {
-            result = await this.NetworkQuery(start, end, filter, `greatest(0,ROUND(SUM(SUM((${field} - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date))))`);
+            query_result = await this.NetworkQuery(params);
         }
 
-        return result;
+        let cumulativeEnergyData_min = [];
+        let cumulativeEnergyData_est = [];
+        let cumulativeEnergyData_max = [];
+
+        for (const item of query_result ) {
+            cumulativeEnergyData_min.push({
+                value: item.emissions_lower,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            cumulativeEnergyData_est.push({
+                value: item.emissions_estimate,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            cumulativeEnergyData_max.push({
+                value: item.emissions_upper,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
+
+        return {
+            cumulativeEnergyData_min: cumulativeEnergyData_min,
+            cumulativeEnergyData_est: cumulativeEnergyData_est,
+            cumulativeEnergyData_max: cumulativeEnergyData_max,
+        };
     }
 
-    async Query(id, start, end, filter, miner) {
-        INFO(`Query[${this.name}] id: ${id}, start: ${start}, end: ${end}, filter: ${filter}, miner: ${miner}`);
+    async Query(id, params) {
+        INFO(`Query[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         let result = {
             id : id,
@@ -104,78 +183,62 @@ class TotalEmissionsWithRenewableFloorModel {
             x : this.x,
             y : this.y,
             version : this.version,
-            filter : filter,
-            miner : miner,
+            filter : params.filter,
+            miner : params.miners,
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
         // Minimum cumulative energy use
-        let cumulativeEnergyData_min = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_lower');
+        let cumulativeEnergyData = await this.VariableEmissions(params);
         let cumulativeEnergy_min = {
             title: 'Lower Bound',
             color: COLOR.green,
-            data: cumulativeEnergyData_min,
+            data: cumulativeEnergyData.cumulativeEnergyData_min,
         }
         result.data.push(cumulativeEnergy_min);
 
         // Estimated cumulative energy use
-        let cumulativeEnergyData_est = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_estimate');
         let cumulativeEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
-            data: cumulativeEnergyData_est,
+            data: cumulativeEnergyData.cumulativeEnergyData_est,
         }
         result.data.push(cumulativeEnergy_est);
 
         // Maximum cumulative energy use
-        let cumulativeEnergyData_max = await this.VariableEmissions(start, end, filter, miner, 'energy_use_kW_upper');
         let cumulativeEnergy_max = {
             title: 'Upper Bound',
             color: COLOR.orange,
-            data: cumulativeEnergyData_max,
+            data: cumulativeEnergyData.cumulativeEnergyData_max,
         }
         result.data.push(cumulativeEnergy_max);
 
         return result;
     }
 
-    async Export(id, start, end, miner, offset, limit, filter) {
+    async Export(id, params) {
         let data = [];
         let fields;
 
-        INFO(`Export[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
+        INFO(`Export[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
 
         try {
-                let result;
+            let query_result;
 
-                if (miner) {
-                    fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
-                    FROM fil_miners_data_view
-                    WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner, timestamp
-                    ORDER BY timestamp
-                    LIMIT ${limit} OFFSET ${offset}`);
+            if (params.miners) {
+                fields = ['emissions_lower', 'emissions_estimate', 'emissions_upper', 'start_date', 'end_date'];
+                query_result = await this.MinerQuery(params);
+            } else if (params.country) {
+                fields = ['country', 'emissions_lower', 'emissions_estimate', 'emissions_upper', 'start_date', 'end_date'];
+                query_result = await this.CountryQuery(params);
+            } else {
+                fields = ['emissions_lower', 'emissions_estimate', 'emissions_upper', 'start_date', 'end_date'];
+                query_result = await this.NetworkQuery(params);
+            }
 
-                } else {
-                    fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
-                    result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
-                    FROM fil_miners_data_view
-                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY timestamp
-                    ORDER BY timestamp
-                    LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
+            if (query_result) {
+                data = query_result;
+            }
         } catch (e) {
             ERROR(`[TotalEmissionsWithRenewableFloorModel] Export error:${e}`);
         }
@@ -186,58 +249,10 @@ class TotalEmissionsWithRenewableFloorModel {
         }
 
         return exportData;
-
     }
 
-    async ResearchExport(id, start, end, miner, offset, limit) {
-        let data = [];
-        let fields;
-        let filter = 'day';
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, start: ${start}, end: ${end}, miner: ${miner}, offset: ${offset}, limit: ${limit}`);
-
-        try {
-                let result;
-
-                if (miner) {
-                    fields = ['miner','emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
-                    result = await this.pool.query(`SELECT miner, date_trunc('${filter}', date::date) AS timestamp \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
-                    FROM fil_miners_data_view
-                    WHERE (miner = '${miner}') AND (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY miner, timestamp
-                    ORDER BY timestamp
-                    LIMIT ${limit} OFFSET ${offset}`);
-
-                } else {
-                    fields = ['emissions_lower','emissions_estimate', 'emissions_upper', 'timestamp'];
-                    result = await this.pool.query(`SELECT date_trunc('${filter}', date::date) AS timestamp \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_lower\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_estimate\" \
-                    , greatest(0, ROUND(SUM(SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) over (ORDER by date_trunc('${filter}', date::date)))) as \"emissions_upper\" \
-                    FROM fil_miners_data_view
-                    WHERE (date::date >= '${start}'::date) AND (date::date <= '${end}'::date)
-                    GROUP BY timestamp
-                    ORDER BY timestamp
-                    LIMIT ${limit} OFFSET ${offset}`);
-                }
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[TotalEmissionsWithRenewableFloorModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+    async ResearchExport(id, params) {
+        return this.Export(id, params);
     }
 
 }
