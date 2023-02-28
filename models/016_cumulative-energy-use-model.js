@@ -61,7 +61,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -73,13 +73,13 @@ class CumulativeEnergyModel_v_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY timestamp) as \"energy_use_kW_lower\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY timestamp) as \"energy_use_kW_estimate\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY timestamp) as \"energy_use_kW_upper\" 
+                            start_date,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY start_date) as \"energy_use_kW_lower\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY start_date) as \"energy_use_kW_estimate\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY start_date) as \"energy_use_kW_upper\" 
                         FROM sealing
-                        GROUP BY timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
@@ -102,7 +102,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
@@ -114,13 +114,13 @@ class CumulativeEnergyModel_v_1_0_1 {
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
-                            timestamp,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY timestamp) as \"energy_use_kW_lower\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY timestamp) as \"energy_use_kW_estimate\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY timestamp) as \"energy_use_kW_upper\" 
+                            start_date,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY start_date) as \"energy_use_kW_lower\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY start_date) as \"energy_use_kW_estimate\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY start_date) as \"energy_use_kW_upper\" 
                         FROM sealing
-                        GROUP BY timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
@@ -144,7 +144,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                         country,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
                         ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS timestamp
+                        date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                             country,
@@ -158,13 +158,13 @@ class CumulativeEnergyModel_v_1_0_1 {
 
                     SELECT
                             country,
-                            timestamp,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY timestamp) as \"energy_use_kW_lower\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY timestamp) as \"energy_use_kW_estimate\" ,
-                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY timestamp) as \"energy_use_kW_upper\" 
+                            start_date,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_min} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_min}) * ${pue_min}) OVER(ORDER BY start_date) as \"energy_use_kW_lower\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_est} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_est}) * ${pue_est}) OVER(ORDER BY start_date) as \"energy_use_kW_estimate\" ,
+                            SUM( ( total * 24 * ${storage_kW_per_GiB_max} + SUM(total_per_day) * ${sealing_kW_per_GiB_block_max}) * ${pue_max}) OVER(ORDER BY start_date) as \"energy_use_kW_upper\" 
                         FROM sealing
-                        GROUP BY country, timestamp, total, total_per_day
-                        ORDER BY timestamp
+                        GROUP BY country, start_date, total, total_per_day
+                        ORDER BY start_date
                 ;`);
         } catch (e) {
             ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);
