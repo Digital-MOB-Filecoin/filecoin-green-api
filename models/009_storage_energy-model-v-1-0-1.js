@@ -282,6 +282,19 @@ class StorageEnergyModelv_1_0_1 {
     async ResearchExport(id, params) {
         return this.Export(id, params);
     }
+
+    async ExportHeader(id, params) {
+        let header = {
+            ReportName: this.name,
+            StorageProviderIDs: params.miners,
+            Country: params.country,
+            From: params.start,
+            To: params.start,
+            Resolution: params.filter,
+        } 
+
+        return header;
+    }
 }
 
 module.exports = {

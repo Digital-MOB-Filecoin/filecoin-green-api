@@ -224,6 +224,47 @@ class Models {
         return result;
     }
 
+    async ExportHeader(id, code_name, query) {
+        let result = undefined;
+
+        let params = {
+            start: Start(query),
+            end: End(query),
+            miners: Miners(query),
+            filter: Filter(query),
+            country: Country(query),
+        }
+
+        if (id) {
+            if (id >= 0 && id < this.models.length) {
+                result = await this.models[id].ExportHeader(id.toString(), params);
+            } else {
+                ERROR(`ExportHeader unable to find model with id: ${id}`);
+            }
+        } else if (code_name) {
+            let found = false;
+            id = 0;
+            for (const model of this.models) {
+                if (model.CodeName() === code_name) {
+                    result = await model.ExportHeader(id.toString(), params);
+                    found = true;
+                }
+
+                if (found) {
+                    break;
+                }
+
+                id++;
+            }
+
+            if (!found) {
+                ERROR(`ExportHeader model with code_name: ${code_name} not found`);
+            }
+        }
+
+        return result;
+    }
+
     List() {
         return this.models_list;
     }
