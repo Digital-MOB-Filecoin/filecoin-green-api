@@ -1,6 +1,7 @@
 
 const { INFO, ERROR, WARNING } = require('./logs');
 const { Models } = require('./models/models');
+var mcache = require('memory-cache');
 
 let models = new Models();
 
@@ -8,6 +9,24 @@ models.LoadModels();
 
 function error_response(code, msg, res) {
     res.status(code).send(msg);
+}
+
+var Cache = (duration) => {
+    return (req, res, next) => {
+        let key = '__express__' + req.originalUrl || req.url
+        let cachedBody = mcache.get(key)
+        if (cachedBody) {
+            res.send(cachedBody)
+            return
+        } else {
+            res.sendResponse = res.send
+            res.send = (body) => {
+                mcache.put(key, body, duration * 1000);
+                res.sendResponse(body)
+            }
+            next()
+        }
+    }
 }
 
 // GET
@@ -119,5 +138,6 @@ module.exports = {
     Model,
     Export,
     ExportHeader,
-    ResearchExport
+    ResearchExport,
+    Cache,
 }

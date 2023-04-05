@@ -4,12 +4,14 @@ const { version } = require('./package.json');
 const { INFO, ERROR, WARNING } = require('./logs');
 const { format, endOfWeek, endOfMonth, endOfDay } = require('date-fns');
 const { head, block, miners, filchain } = require('./filchain-api');
-const { List, Model, Export, ExportHeader, ResearchExport } = require('./models-api');
+const { List, Model, Export, ExportHeader, ResearchExport, Cache } = require('./models-api');
 const { MapList, MapListCountry, MapListMiner } = require('./map-api');
 
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yaml');
 const swaggerUi = require('swagger-ui-express');
+
+const CACHE_DURATION = 3600;
 
 var express = require("express");
 var cors = require('cors');
@@ -481,11 +483,11 @@ app.get("/filchain/block", block);
 app.get("/filchain/miners", miners);
 app.get("/filchain", filchain);
 
-app.get("/models/list", List);
-app.get("/models/model", Model);
-app.get("/models/export", Export);
-app.get("/models/export/header", ExportHeader);
-app.get("/models/research_export", ResearchExport);
+app.get("/models/list", Cache(CACHE_DURATION), List);
+app.get("/models/model", Cache(CACHE_DURATION), Model);
+app.get("/models/export", Cache(CACHE_DURATION), Export);
+app.get("/models/export/header", Cache(CACHE_DURATION), ExportHeader);
+app.get("/models/research_export", Cache(CACHE_DURATION), ResearchExport);
 
 app.get("/map/list", MapList);
 app.get("/map/list/country", MapListCountry);

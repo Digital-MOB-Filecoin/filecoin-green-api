@@ -23,6 +23,7 @@
     "cors": "^2.8.5",
     "date-fns": "^2.22.1",
     "express": "^4.17.1",
+    "memory-cache": "^0.2.0",
     "pg": "^8.6.0",
     "swagger-ui-express": "^4.4.0",
     "time-stamp": "^2.2.0",
