@@ -11,7 +11,7 @@ const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yaml');
 const swaggerUi = require('swagger-ui-express');
 
-const CACHE_DURATION = 3600;
+const CACHE_DURATION = 24 * 3600;
 
 var express = require("express");
 var cors = require('cors');
