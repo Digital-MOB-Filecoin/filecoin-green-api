@@ -12,7 +12,7 @@ function error_response(code, msg, res) {
 // GET
 const MapList = async function (req, res, next) {
     try {
-        var result = await pool.query('SELECT * FROM fil_map_view;');
+        var result = await pool.query('SELECT * FROM fil_map_view ORDER BY storage_providers DESC;');
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list]: ${JSON.stringify(result.rows.length)} datapoints`);
@@ -51,12 +51,13 @@ const MapListCountry = async function (req, res, next) {
     try {
         var result = await pool.query(`
         with miners_data as (SELECT miner, country, city, lat, long FROM fil_location_view WHERE country = '${country}'),
-             power_data as (SELECT miner, power FROM fil_miners_view_v3)
-             SELECT
+             power_data as (SELECT miner, power FROM fil_miners_view_v3),
+             data as ( SELECT
                 miners_data.miner, country, city, lat, long, power
-             FROM miners_data
-             LEFT JOIN power_data ON miners_data.miner = power_data.miner
-             LIMIT ${limit} OFFSET ${offset};
+                FROM miners_data
+                LEFT JOIN power_data ON miners_data.miner = power_data.miner )
+                SELECT * FROM data WHERE power is not null 
+             ORDER BY power DESC;
         `);
 
         if (result.rows.length > 0) {

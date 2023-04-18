@@ -215,44 +215,7 @@ class SealedModel {
     }
 
     async ResearchExport(id, params) {
-        let data = [];
-        let fields;
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
-
-        try {
-                let result;
-
-                if (params.miners) {
-                    fields = ['epoch','miner','sealed_this_epoch_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total_per_epoch as \"sealed_this_epoch_GiB\",timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner in ${params.miners}) AND (epoch >= ${get_epoch(params.start)}) AND (epoch <= ${get_epoch(params.end)}) \
-                    ORDER BY epoch LIMIT ${params.limit} OFFSET ${params.offset}`);
-                } else if (params.country) {
-
-                } else {
-                    fields = ['epoch','sealed_this_epoch_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total_per_epoch as \"sealed_this_epoch_GiB\",timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(params.start)}) AND (epoch <= ${get_epoch(params.end)}) \
-                    ORDER BY epoch LIMIT ${params.limit} OFFSET ${params.offset}`);
-                }
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[SealedModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+        return this.Export(id, params);
     }
 
     async ExportHeader(id, params) {

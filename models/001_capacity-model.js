@@ -212,45 +212,7 @@ class CapacityModel {
     }
 
     async ResearchExport(id, params) {
-        let data = [];
-        let fields;
-
-        INFO(`ResearchExport[${this.name}] id: ${id}, params: ${JSON.stringify(params)}`);
-
-        try {
-                let result;
-
-                if (params.miners) {
-                    fields = ['epoch','miner','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,miner,total as \"capacity_GiB\",timestamp \
-                    FROM fil_miner_view_epochs \
-                    WHERE (miner in ${params.miners}) AND (epoch >= ${get_epoch(params.start)}) AND (epoch <= ${get_epoch(params.end)}) \
-                    ORDER BY epoch LIMIT ${params.limit} OFFSET ${params.offset}`);
-                } else if (params.country) {
-                    
-                } else {
-                    fields = ['epoch','capacity_GiB','timestamp'];
-                    result = await this.pool.query(`SELECT epoch,total as \"capacity_GiB\",timestamp \
-                    FROM fil_network_view_epochs \
-                    WHERE (epoch >= ${get_epoch(params.start)}) AND (epoch <= ${get_epoch(params.end)}) \
-                    ORDER BY epoch LIMIT ${params.limit} OFFSET ${params.offset}`);
-                }
-
-
-                if (result?.rows) {
-                    data = result?.rows;
-                }
-        } catch (e) {
-            ERROR(`[CapacityModel] Export error:${e}`);
-        }
-
-        let exportData = {
-            fields: fields,
-            data: data,
-        }
-
-        return exportData;
-
+        return this.Export(id, params);
     }
 
     async ExportHeader(id, params) {
