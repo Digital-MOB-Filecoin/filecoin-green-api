@@ -99,7 +99,7 @@ const filchain = async function (req, res, next) {
     }
 
     if (cid) {
-        query += `(\"CID\" = '${cid}') `;
+        query += `(\"CID\" = '${cid}' OR \"Cid\" = '${cid}') `;
         have_params = true;
     }
 
