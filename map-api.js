@@ -12,7 +12,7 @@ function error_response(code, msg, res) {
 // GET
 const MapList = async function (req, res, next) {
     try {
-        var result = await pool.query('SELECT * FROM fil_map_view_v2 ORDER BY storage_providers DESC;');
+        var result = await pool.query('SELECT * FROM fil_map_view_v3 ORDER BY storage_providers DESC;');
 
         if (result.rows.length > 0) {
             INFO(`GET[/map/list]: ${JSON.stringify(result.rows.length)} datapoints`);
