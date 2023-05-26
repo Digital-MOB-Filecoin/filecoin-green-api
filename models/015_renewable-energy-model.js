@@ -46,7 +46,6 @@ class RenewableEnergyModel {
                     date
                     FROM fil_miners_data_view_country_v4
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY date, renewable_energy_kw
                     ORDER BY date ${padding}),
                     datapoints as (
                         SELECT 
@@ -54,7 +53,7 @@ class RenewableEnergyModel {
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM data
                         GROUP BY date)
-                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
+                    SELECT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] NetworkQuery error:${e}`);
@@ -78,7 +77,6 @@ class RenewableEnergyModel {
                     date
                     FROM fil_miners_data_view_country_v4
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY date, renewable_energy_kw
                     ORDER BY date ${padding}),
                     datapoints as (
                         SELECT 
@@ -86,7 +84,7 @@ class RenewableEnergyModel {
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM data
                         GROUP BY date)
-                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
+                    SELECT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                 `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] MinerQuery error:${e}`);
@@ -110,7 +108,6 @@ class RenewableEnergyModel {
                     date
                     FROM fil_miners_data_view_country_v4
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY date, date, renewable_energy_kw
                     ORDER BY date ${padding}),
                     datapoints as (
                         SELECT 
@@ -118,7 +115,7 @@ class RenewableEnergyModel {
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM data
                         GROUP BY date)
-                    SELECT DISTINCT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
+                    SELECT start_date, \"energykWh\" FROM datapoints ORDER BY start_date;
                     `);
         } catch (e) {
             ERROR(`[RenewableEnergyModel] MinerQuery error:${e}`);
