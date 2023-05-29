@@ -48,9 +48,9 @@ class TotalEmissionsWithRenewableFloorModel {
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -83,9 +83,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 FROM (
                     SELECT
                         country,
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -116,9 +116,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * COALESCE(avg_wt_value, avg_un_value, 0))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
