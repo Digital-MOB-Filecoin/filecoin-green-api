@@ -4,6 +4,8 @@ const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
 
+const avg_value = 475; //gCO2
+
 class TotalEmissionsWithRenewableFloorModel {
     constructor(pool) {
         this.code_name = 'TotalEmissionsWithRenewableFloorModel';
@@ -48,9 +50,9 @@ class TotalEmissionsWithRenewableFloorModel {
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -83,9 +85,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 FROM (
                     SELECT
                         country,
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -116,9 +118,9 @@ class TotalEmissionsWithRenewableFloorModel {
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_lower,
-                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_estimate,
-                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (COALESCE(avg_wt_value, avg_un_value, 475) / 1000))) as cumulative_emissions_upper,
+                        greatest(0,SUM((energy_use_kW_lower - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_lower,
+                        greatest(0,SUM((energy_use_kW_estimate - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_estimate,
+                        greatest(0,SUM((energy_use_kW_upper - renewable_energy_kW) * (CAST(COALESCE(avg_wt_value, avg_un_value, ${avg_value}) AS decimal) / 1000))) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v4
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
