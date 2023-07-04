@@ -224,4 +224,128 @@ paths:
                   data:
                     type: string
                     example: "array"      
+  /map/list:
+   get:
+      summary: "Get the list of countries"
+      operationId: "mapList"
+      produces:
+      - "application/json"
+      parameters:
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 1000
+        default: 100
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
+                    example: "array"      
+  /map/list/country:
+   get:
+      summary: "Get the list of countries"
+      operationId: "mapListCountry"
+      produces:
+      - "application/json"
+      parameters:
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 1000
+        default: 100
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
+                    example: "array"  
+  /map/list/miner:
+   get:
+      summary: "Get the list of countries"
+      operationId: "mapListMiner"
+      produces:
+      - "application/json"
+      parameters:
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 1000
+        default: 100
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
+                    example: "array"  
+  /miners:
+   get:
+      summary: "Get the list of miners"
+      operationId: "miners"
+      produces:
+      - "application/json"
+      parameters:
+      - name : "offset"
+        in: "query"
+        type: integer
+        required: false
+        default: 0
+      - name : "limit"
+        in: "query"
+        type: integer
+        required: false
+        minimum: 1
+        maximum: 1000
+        default: 100
+      responses:
+        "200":
+          description: "successful"
+          schema:
+                type: object
+                properties:
+                  fields:
+                    type: string
+                    example: "array"
+                  data:
+                    type: string
+                    example: "array" 
                     
