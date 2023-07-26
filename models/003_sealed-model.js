@@ -51,7 +51,7 @@ class SealedModel {
                     SELECT
                         SUM(total_per_day) AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -81,7 +81,7 @@ class SealedModel {
                     SELECT
                         SUM(total_per_day) AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -113,7 +113,7 @@ class SealedModel {
                         country,
                         SUM(total_per_day) AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY country, date
                     ) q 

@@ -44,7 +44,7 @@ class RenewableEnergyModel {
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
                     date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     ORDER BY date ${padding}),
                     datapoints as (
@@ -75,7 +75,7 @@ class RenewableEnergyModel {
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
                     date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     ORDER BY date ${padding}),
                     datapoints as (
@@ -106,7 +106,7 @@ class RenewableEnergyModel {
                 with data as (SELECT
                     SUM(renewable_energy_kw) OVER(ORDER BY date) AS \"energykWh\",
                     date
-                    FROM fil_miners_data_view_country_v5
+                    FROM fil_miners_data_view_country_v6
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     ORDER BY date ${padding}),
                     datapoints as (
