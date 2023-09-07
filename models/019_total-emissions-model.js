@@ -50,9 +50,9 @@ class TotalEmissionsModel {
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_lower,
-                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_estimate,
-                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_upper,
+                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_lower,
+                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_estimate,
+                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v7
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -85,9 +85,9 @@ class TotalEmissionsModel {
                 FROM (
                     SELECT
                         country,
-                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_lower,
-                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_estimate,
-                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_upper,
+                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_lower,
+                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_estimate,
+                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v7
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
@@ -118,9 +118,9 @@ class TotalEmissionsModel {
                 date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_lower,
-                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_estimate,
-                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) / 1000)) as cumulative_emissions_upper,
+                        SUM(energy_use_kW_lower * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_lower,
+                        SUM(energy_use_kW_estimate * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_estimate,
+                        SUM(energy_use_kW_upper * (CAST(COALESCE(avg_ef_value, ${avg_value}) AS decimal) )) as cumulative_emissions_upper,
                         date
                     FROM fil_miners_data_view_country_v7
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
