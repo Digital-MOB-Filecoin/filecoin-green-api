@@ -66,7 +66,7 @@ class Models {
         if (config.filgreen.experimental_models == 1) {
             this.Register(totalEmissionsModel);                   //Total emissions 
             this.Register(totalEmissionsWithRenewableFloorModel); //Total emissions with renewable (floor)
-            this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
+            // this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
         }
 
         this.Register(energyIntensityModel);          //Energy Intensity
