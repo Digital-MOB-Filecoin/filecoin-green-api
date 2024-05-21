@@ -49,9 +49,9 @@ class SealedModel {
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(total_per_day) AS cumulative_total_per_day,
+                        SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_sealed_capacity_view
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -79,9 +79,9 @@ class SealedModel {
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        SUM(total_per_day) AS cumulative_total_per_day,
+                        SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_sealed_capacity_view
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -111,9 +111,9 @@ class SealedModel {
                 FROM (
                     SELECT
                         country,
-                        SUM(total_per_day) AS cumulative_total_per_day,
+                        SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_sealed_capacity_view
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY country, date
                     ) q 
