@@ -51,7 +51,7 @@ class SealedModel {
                     SELECT
                         SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_sealed_capacity_view
+                    FROM fil_sealed_capacity_view_v2
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -81,7 +81,7 @@ class SealedModel {
                     SELECT
                         SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_sealed_capacity_view
+                    FROM fil_sealed_capacity_view_v2
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
                 ) q 
@@ -104,20 +104,23 @@ class SealedModel {
 
         try {
             result = await this.pool.query(`
+                WITH minerLocationFilter as (
+                    select DISTINCT(miner)
+                    from fil_miners_location
+                    where country = '${params.country}'
+                )
                 SELECT
-                    country,
                     ROUND(AVG(cumulative_total_per_day)) as \"sealed_GiB\",
                     date_trunc('${params.filter}', date::date) AS start_date
                 FROM (
                     SELECT
-                        country,
                         SUM("sealed_GiB") AS cumulative_total_per_day,
                         date
-                    FROM fil_sealed_capacity_view
-                    WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                    GROUP BY country, date
+                    FROM fil_sealed_capacity_view_v2
+                    WHERE miner in (select * from minerLocationFilter) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                    GROUP BY date
                     ) q 
-                GROUP BY country, start_date ORDER BY start_date  ${padding};
+                GROUP BY start_date ORDER BY start_date  ${padding};
         `);
         } catch (e) {
             ERROR(`[CapacityModel] CountryQuery error:${e}`);
