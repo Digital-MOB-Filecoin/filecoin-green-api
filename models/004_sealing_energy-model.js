@@ -3,12 +3,13 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 class SealingEnergyModel {
     constructor(pool) {
         this.code_name = 'SealingEnergyModel';
         this.pool = pool;
-        this.name = 'Energy used to seal data (v1.0.1)';
+        this.name = 'Energy used to seal data (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -88,9 +89,9 @@ class SealingEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.min["sealing_kWh_GiB_base_/_24"]}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00026882', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.min["sealing_kWh_GiB_base_/_24"]}`, start, end, filter);
         }
 
         return result;
@@ -100,9 +101,9 @@ class SealingEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"]}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00152847', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"]}`, start, end, filter);
         }
 
         return result;
@@ -112,9 +113,9 @@ class SealingEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.max["sealing_kWh_GiB_base_/_24"]}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total_per_day))*0.00250540', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total_per_day))*${v102PerGiB.max["sealing_kWh_GiB_base_/_24"]}`, start, end, filter);
         }
 
         return result;
@@ -180,9 +181,9 @@ class SealingEnergyModel {
 
                 if (miner) {
                     fields = ['epoch','miner','sealing_energy_kW_lower','sealing_energy_kW_estimate', 'sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
-                                                                       , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
-                                                                       , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
+                    result = await this.pool.query(`SELECT epoch, miner, total_per_epoch*${v102PerGiB.min["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_lower\" \
+                                                                       , total_per_epoch*${v102PerGiB.estimate["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_estimate\" \
+                                                                       , total_per_epoch*${v102PerGiB.max["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_upper\" \
                                                                        , timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
@@ -190,9 +191,9 @@ class SealingEnergyModel {
 
                 } else {
                     fields = ['epoch','sealing_energy_kW_lower','sealing_energy_kW_estimate','sealing_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total_per_epoch*0.77419505 as \"sealing_energy_kW_lower\" \
-                                                                , total_per_epoch*4.40199788 as \"sealing_energy_kW_estimate\" \
-                                                                , total_per_epoch*7.21554506 as \"sealing_energy_kW_upper\" \
+                    result = await this.pool.query(`SELECT epoch, total_per_epoch*${v102PerGiB.min["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_lower\" \
+                                                                , total_per_epoch*${v102PerGiB.estimate["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_estimate\" \
+                                                                , total_per_epoch*${v102PerGiB.max["sealing_kWh_GiB_base_*_120"]} as \"sealing_energy_kW_upper\" \
                                                                 , timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \

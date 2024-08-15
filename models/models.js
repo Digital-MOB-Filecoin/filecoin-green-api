@@ -11,15 +11,15 @@ const { SealingEnergyModel } = require('./004_sealing_energy-model');
 const { StorageEnergyModel } = require('./005_storage_energy-model');
 const { TotalEnergyModel } = require('./006_total_energy-model');
 const { SealingEnergySumModel } = require('./007_sealing-energy-sum-model');
-const { SealingEnergyModelv_1_0_1 } = require('./008_sealing_energy-model-v-1-0-1');
-const { StorageEnergyModelv_1_0_1 } = require('./009_storage_energy-model-v-1-0-1');
-const { TotalEnergyModelv_1_0_1 } = require('./010_total_energy-model-v-1-0-1');
+const { SealingEnergyModelv_1_0_2 } = require('./008_sealing_energy-model-v-1-0-2');
+const { StorageEnergyModelv_1_0_2 } = require('./009_storage_energy-model-v-1-0-2');
+const { TotalEnergyModelv_1_0_2 } = require('./010_total_energy-model-v-1-0-2');
 const { TotalSealedModel } = require('./011_total-sealed-model');
 const { TotalStoredOverTimeModel } = require('./012_total-stored-over-time-model');
 const { TotalSealedStoredOverTimeModel } = require('./013_total-sealed_plus_stored-over-time-model');
 const { TotalSealingEnergyModel } = require('./014_total-sealing-energy');
 const { RenewableEnergyModel } = require('./015_renewable-energy-model');
-const { CumulativeEnergyModel_v_1_0_1 } = require('./016_cumulative-energy-use-model');
+const { CumulativeEnergyModel_v_1_0_2 } = require('./016_cumulative-energy-use-model');
 const { RenewableEnergyRatioModel } = require('./017_renewable-energy-ratio-model.js');
 const { EnergyIntensityModel } = require('./018_energy-intensity-model.js');
 const { TotalEmissionsModel } = require('./019_total-emissions-model.js');
@@ -33,15 +33,15 @@ let sealingEnergyModel = new SealingEnergyModel(pool);
 let storageEnergyModel = new StorageEnergyModel(pool);
 let totalEnergyModel = new TotalEnergyModel(pool);
 let sealingEnergySumModel = new SealingEnergySumModel(pool);
-let sealingEnergyModelv_1_0_1 = new SealingEnergyModelv_1_0_1(pool);
-let storageEnergyModelv_1_0_1 = new StorageEnergyModelv_1_0_1(pool);
-let totalEnergyModelv_1_0_1 = new TotalEnergyModelv_1_0_1(pool);
+let sealingEnergyModelv_1_0_2 = new SealingEnergyModelv_1_0_2(pool);
+let storageEnergyModelv_1_0_2 = new StorageEnergyModelv_1_0_2(pool);
+let totalEnergyModelv_1_0_2 = new TotalEnergyModelv_1_0_2(pool);
 let totalSealedModel = new TotalSealedModel(pool);
 let totalStoredOverTimeModel = new TotalStoredOverTimeModel(pool);
 let totalSealedStoredOverTimeModel = new TotalSealedStoredOverTimeModel(pool);
 let totalSealingEnergyModel = new TotalSealingEnergyModel(pool);
 let renewableEnergyModel = new RenewableEnergyModel(pool);
-let cumulativeEnergyModel_v_1_0_1 = new CumulativeEnergyModel_v_1_0_1(pool);
+let cumulativeEnergyModel_v_1_0_2 = new CumulativeEnergyModel_v_1_0_2(pool);
 let renewableEnergyRatioModel = new RenewableEnergyRatioModel(pool);
 let energyIntensityModel = new EnergyIntensityModel(pool);
 let totalEmissionsModel = new TotalEmissionsModel(pool);
@@ -57,10 +57,10 @@ class Models {
 
     LoadModels() {
         //this.Register(renewableEnergyRatioModel);           //Renewable energy ratio
-        this.Register(totalEnergyModelv_1_0_1);       //Energy consumption rate (v1.0.1)
-        this.Register(sealingEnergyModelv_1_0_1);     //Energy used to seal data (v1.0.1)
-        this.Register(storageEnergyModelv_1_0_1);     //Energy used to store data (v1.0.1)
-        this.Register(cumulativeEnergyModel_v_1_0_1); //Cumulative Energy Use (v1.0.1)
+        this.Register(totalEnergyModelv_1_0_2);       //Energy consumption rate (v1.0.2)
+        this.Register(sealingEnergyModelv_1_0_2);     //Energy used to seal data (v1.0.2)
+        this.Register(storageEnergyModelv_1_0_2);     //Energy used to store data (v1.0.2)
+        this.Register(cumulativeEnergyModel_v_1_0_2); //Cumulative Energy Use (v1.0.2)
         this.Register(renewableEnergyModel);          //Cumulative renewable energy purchases
 
         if (config.filgreen.experimental_models == 1) {

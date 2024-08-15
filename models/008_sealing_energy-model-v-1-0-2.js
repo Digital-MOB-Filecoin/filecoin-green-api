@@ -3,24 +3,17 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
-const sealing_kW_per_GiB_block_min = '0.00026882';
-const sealing_kW_per_GiB_block_est = '0.00152847';
-const sealing_kW_per_GiB_block_max = '0.00250540';
+const sealing_kW_per_GiB_block_min = v102PerGiB.min["sealing_kWh_GiB_base_/_24"];
+const sealing_kW_per_GiB_block_est = v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"];
+const sealing_kW_per_GiB_block_max = v102PerGiB.max["sealing_kWh_GiB_base_/_24"];
 
-const storage_kW_per_GiB_min = '0.0000009688';
-const storage_kW_per_GiB_est = '0.0000032212';
-const storage_kW_per_GiB_max = '0.0000086973';
-
-const pue_min = 1.18;
-const pue_est = 1.57;
-const pue_max = 1.93;
-
-class TotalEnergyModelv_1_0_1 {
+class SealingEnergyModelv_1_0_2 {
     constructor(pool) {
-        this.code_name = 'TotalEnergyModelv_1_0_1';
+        this.code_name = 'SealingEnergyModelv_1_0_2';
         this.pool = pool;
-        this.name = 'Energy consumption rate (v1.0.1)';
+        this.name = 'Energy used to seal data (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -40,11 +33,11 @@ class TotalEnergyModelv_1_0_1 {
     }
 
     Details() {
-        return `The total rate of electrical energy use. This is the sum of sealing and storage energy use, multiplied by a [Power Usage Effectiveness](https://en.wikipedia.org/wiki/Power_usage_effectiveness) (PUE) representing overhead energy costs such as cooling and power conversion. Bounds and estimate come from combining the bounds and estimates of sealing and storage energy, as well as different values of estimated PUE.
+        return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the process of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
 
-**Network view:** Total electrical power used by the Filecoin network.
+**Network view:** Total electrical power used to seal data for the entire Filecoin network.
 
-**Storage Provider (SP) view:** Electrical power used by this SP.
+**Storage Provider (SP) view:** Electrical power used by this SP to seal data.
 `;
     }
 
@@ -58,32 +51,30 @@ class TotalEnergyModelv_1_0_1 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with sealing as(
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
-                                SUM(total) AS cumulative_capacity,
                                 SUM(total_per_day) AS cumulative_total_per_day
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
                             start_date,
-                            (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
-                            (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
-                            (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
-                        FROM storage
-                        GROUP BY start_date, total, total_per_day
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY start_date, total_per_day
                         ORDER BY start_date
                 ;`);
         } catch (e) {
-            ERROR(`[totalEnergyModel] NetworkQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] NetworkQuery error:${e}`);
         }
 
         return add_time_interval(params.start, params.end, params.filter, result.rows);
@@ -99,32 +90,30 @@ class TotalEnergyModelv_1_0_1 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with sealing as(
                     SELECT
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                                 date,
-                                SUM(total) AS cumulative_capacity,
                                 SUM(total_per_day) AS cumulative_total_per_day
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding})
 
                     SELECT
                             start_date,
-                            (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
-                            (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
-                            (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
-                        FROM storage
-                        GROUP BY start_date, total, total_per_day
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY start_date, total_per_day
                         ORDER BY start_date
                 ;`);
         } catch (e) {
-            ERROR(`[totalEnergyModel] MinerQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] MinerQuery error:${e}`);
         }
 
         return add_time_interval(params.start, params.end, params.filter, result.rows);
@@ -140,41 +129,39 @@ class TotalEnergyModelv_1_0_1 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with sealing as(
                     SELECT
                         country,
                         ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
                         date_trunc('${params.filter}', date::date) AS start_date
                         FROM (
                             SELECT
                             country,
                                 date,
-                                SUM(total) AS cumulative_capacity,
                                 SUM(total_per_day) AS cumulative_total_per_day
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY  country, date) q1
-                        GROUP BY  country, date ORDER BY date ${padding})
+                            GROUP BY country, date) q1
+                        GROUP BY country, date ORDER BY date ${padding})
 
                     SELECT
                             country,
                             start_date,
-                            (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
-                            (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
-                            (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
-                        FROM storage
-                        GROUP BY country, start_date, total, total_per_day
+                            total_per_day * ${sealing_kW_per_GiB_block_min} as \"sealing_energy_kW_lower\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_est}  as \"sealing_energy_kW_estimate\" ,
+                            total_per_day * ${sealing_kW_per_GiB_block_max}  as \"sealing_energy_kW_upper\" 
+                        FROM sealing
+                        GROUP BY country, start_date, total_per_day
                         ORDER BY start_date
                 ;`);
         } catch (e) {
-            ERROR(`[totalEnergyModel] CountryQuery error:${e}`);
+            ERROR(`[SealingEnergyModel] CountryQuery error:${e}`);
         }
 
         return add_time_interval(params.start, params.end, params.filter, result.rows);
     }
-    
-    async VariableTotalEnergy(params) {
+
+    async VariableSealingEnergy(params) {
         var query_result;
 
         if (params.miners) {
@@ -185,32 +172,32 @@ class TotalEnergyModelv_1_0_1 {
             query_result = await this.NetworkQuery(params);
         }
 
-        let totalEnergyData_min = [];
-        let totalEnergyData_est = [];
-        let totalEnergyData_max = [];
+        let sealingEnergyData_min = [];
+        let sealingEnergyData_est = [];
+        let sealingEnergyData_max = [];
 
         for (const item of query_result ) {
-            totalEnergyData_min.push({
-                value: item.total_energy_kW_lower,
+            sealingEnergyData_min.push({
+                value: item.sealing_energy_kW_lower,
                 start_date: item.start_date,
                 end_date: item.end_date,
             });
-            totalEnergyData_est.push({
-                value: item.total_energy_kW_estimate,
+            sealingEnergyData_est.push({
+                value: item.sealing_energy_kW_estimate,
                 start_date: item.start_date,
                 end_date: item.end_date,
             });
-            totalEnergyData_max.push({
-                value: item.total_energy_kW_upper,
+            sealingEnergyData_max.push({
+                value: item.sealing_energy_kW_upper,
                 start_date: item.start_date,
                 end_date: item.end_date,
             });
         }
 
         return {
-            totalEnergyData_min: totalEnergyData_min,
-            totalEnergyData_est: totalEnergyData_est,
-            totalEnergyData_max: totalEnergyData_max,
+            sealingEnergyData_min: sealingEnergyData_min,
+            sealingEnergyData_est: sealingEnergyData_est,
+            sealingEnergyData_max: sealingEnergyData_max,
         };
     }
 
@@ -231,35 +218,35 @@ class TotalEnergyModelv_1_0_1 {
         }
 
         // Minimum cumulative energy use
-        let totalEnergyData = await this.VariableTotalEnergy(params);
-        let totalEnergy_min = {
+        let sealingEnergyData = await this.VariableSealingEnergy(params);
+        let sealingEnergy_min = {
             title: 'Lower Bound',
             color: COLOR.green,
-            data: totalEnergyData.totalEnergyData_min,
+            data: sealingEnergyData.sealingEnergyData_min,
         }
-        result.data.push(totalEnergy_min);
+        result.data.push(sealingEnergy_min);
 
         // Estimated cumulative energy use
-        let totalEnergy_est = {
+        let sealingEnergy_est = {
             title: 'Estimate',
             color: COLOR.silver,
-            data: totalEnergyData.totalEnergyData_est,
+            data: sealingEnergyData.sealingEnergyData_est,
         }
-        result.data.push(totalEnergy_est);
+        result.data.push(sealingEnergy_est);
 
         // Maximum cumulative energy use
-        let totalEnergy_max = {
+        let sealingEnergy_max = {
             title: 'Upper Bound',
             color: COLOR.orange,
-            data: totalEnergyData.totalEnergyData_max,
+            data: sealingEnergyData.sealingEnergyData_max,
         }
-        result.data.push(totalEnergy_max);
+        result.data.push(sealingEnergy_max);
 
         return result;
     }
 
-    async Export(id, params) {
 
+    async Export(id, params) {
         let data = [];
         let fields;
 
@@ -269,13 +256,13 @@ class TotalEnergyModelv_1_0_1 {
             let query_result;
 
             if (params.miners) {
-                fields = ['total_energy_kW_lower', 'total_energy_kW_estimate', 'total_energy_kW_upper', 'start_date', 'end_date'];
+                fields = ['sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.MinerQuery(params);
             } else if (params.country) {
-                fields = ['country', 'total_energy_kW_lower', 'total_energy_kW_estimate', 'total_energy_kW_upper', 'start_date', 'end_date'];
+                fields = ['country', 'sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.CountryQuery(params);
             } else {
-                fields = ['total_energy_kW_lower', 'total_energy_kW_estimate', 'total_energy_kW_upper', 'start_date', 'end_date'];
+                fields = ['sealing_energy_kW_lower', 'sealing_energy_kW_estimate', 'sealing_energy_kW_upper', 'start_date', 'end_date'];
                 query_result = await this.NetworkQuery(params);
             }
 
@@ -283,7 +270,7 @@ class TotalEnergyModelv_1_0_1 {
                 data = query_result;
             }
         } catch (e) {
-            ERROR(`[TotalEnergyModelv_1_0_1] Export error:${e}`);
+            ERROR(`[SealingEnergyModelv_1_0_2] Export error:${e}`);
         }
 
         let exportData = {
@@ -314,5 +301,5 @@ class TotalEnergyModelv_1_0_1 {
 }
 
 module.exports = {
-    TotalEnergyModelv_1_0_1
+    SealingEnergyModelv_1_0_2
 };
