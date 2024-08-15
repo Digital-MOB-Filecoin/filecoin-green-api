@@ -3,11 +3,12 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 const consts = {
-    sealing_kWh_GiB: 0.0601295421,
-    storage_kW_GiB: 0.0000086973,
-    pue: 1.93
+    sealing_kWh_GiB: v102PerGiB.max.sealing_kWh_GiB_base,
+    storage_kW_GiB: v102PerGiB.max.storage_kW_GiB,
+    pue: v102PerGiB.max.pue
   }
 
 class RenewableEnergyRatioModel {

@@ -3,12 +3,13 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 class StorageEnergyModel {
     constructor(pool) {
         this.code_name = 'StorageEnergyModel';
         this.pool = pool;
-        this.name = 'Energy used to store data (v1.0.1)';
+        this.name = 'Energy used to store data (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -88,9 +89,9 @@ class StorageEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000009688', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total))*${v102PerGiB.min.storage_kW_GiB}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000009688', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total))*${v102PerGiB.min.storage_kW_GiB}`, start, end, filter);
         }
 
         return result;
@@ -100,9 +101,9 @@ class StorageEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000032212', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total))*${v102PerGiB.estimate.storage_kW_GiB}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000032212', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total))*${v102PerGiB.estimate.storage_kW_GiB}`, start, end, filter);
         }
 
         return result;
@@ -112,9 +113,9 @@ class StorageEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('ROUND(AVG(total))*0.0000086973', start, end, filter, miner);
+            result = await this.MinerQuery(`ROUND(AVG(total))*${v102PerGiB.max.storage_kW_GiB}`, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('ROUND(AVG(total))*0.0000086973', start, end, filter);
+            result = await this.NetworkQuery(`ROUND(AVG(total))*${v102PerGiB.max.storage_kW_GiB}`, start, end, filter);
         }
 
         return result;
@@ -180,9 +181,9 @@ class StorageEnergyModel {
 
                 if (miner) {
                     fields = ['epoch','miner','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, miner, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                       , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                       , total*0.0000086973 as \"storage_energy_kW_upper\" \
+                    result = await this.pool.query(`SELECT epoch, miner, total*${v102PerGiB.min.storage_kW_GiB} as \"storage_energy_kW_lower\" \
+                                                                       , total*${v102PerGiB.estimate.storage_kW_GiB} as \"storage_energy_kW_estimate\" \
+                                                                       , total*${v102PerGiB.max.storage_kW_GiB} as \"storage_energy_kW_upper\" \
                                                                        , timestamp \
                     FROM fil_miner_view_epochs \
                     WHERE (miner = '${miner}') AND (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \
@@ -190,9 +191,9 @@ class StorageEnergyModel {
 
                 } else {
                     fields = ['epoch','storage_energy_kW_lower','storage_energy_kW_estimate','storage_energy_kW_upper','timestamp'];
-                    result = await this.pool.query(`SELECT epoch, total*0.0000009688 as \"storage_energy_kW_lower\" \
-                                                                , total*0.0000032212 as \"storage_energy_kW_estimate\" \
-                                                                , total*0.0000086973 as \"storage_energy_kW_upper\" \
+                    result = await this.pool.query(`SELECT epoch, total*${v102PerGiB.min.storage_kW_GiB} as \"storage_energy_kW_lower\" \
+                                                                , total*${v102PerGiB.estimate.storage_kW_GiB} as \"storage_energy_kW_estimate\" \
+                                                                , total*${v102PerGiB.max.storage_kW_GiB} as \"storage_energy_kW_upper\" \
                                                                 , timestamp \
                     FROM fil_network_view_epochs \
                     WHERE (epoch >= ${get_epoch(start)}) AND (epoch <= ${get_epoch(end)}) \

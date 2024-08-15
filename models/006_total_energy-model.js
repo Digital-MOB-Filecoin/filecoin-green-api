@@ -3,12 +3,13 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 class TotalEnergyModel {
     constructor(pool) {
         this.code_name = 'TotalEnergyModel';
         this.pool = pool;
-        this.name = 'Total energy used (v1.0.1)';
+        this.name = 'Total energy used (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kW;
@@ -125,10 +126,10 @@ class TotalEnergyModel {
 
         if (miner) {
             // MinerQuery(sealingCoeff, storageCoeff, pue, start, end, filter, miner)
-            result = await this.MinerQuery('0.00026882', '0.0000009688', 1.18, start, end, filter, miner);
+            result = await this.MinerQuery(v102PerGiB.min["sealing_kWh_GiB_base_/_24"], v102PerGiB.min.storage_kW_GiB, v102PerGiB.min.pue, start, end, filter, miner);
         } else {
             // NetworkQuery(sealingCoeff, storageCoeff, pue, start, end, filter)
-            result = await this.NetworkQuery('0.00026882', '0.0000009688', 1.18, start, end, filter);
+            result = await this.NetworkQuery(v102PerGiB.min["sealing_kWh_GiB_base_/_24"], v102PerGiB.min.storage_kW_GiB, v102PerGiB.min.pue, start, end, filter);
         }
 
         return result;
@@ -138,9 +139,9 @@ class TotalEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('0.00152847', '0.0000032212', 1.57, start, end, filter, miner);
+            result = await this.MinerQuery(v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"], v102PerGiB.estimate.storage_kW_GiB, v102PerGiB.estimate.pue, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('0.00152847', '0.0000032212', 1.57, start, end, filter);
+            result = await this.NetworkQuery(v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"], v102PerGiB.estimate.storage_kW_GiB, v102PerGiB.estimate.pue, start, end, filter);
         }
 
         return result;
@@ -150,9 +151,9 @@ class TotalEnergyModel {
         var result;
 
         if (miner) {
-            result = await this.MinerQuery('0.00250540', '0.0000086973', 1.93, start, end, filter, miner);
+            result = await this.MinerQuery(v102PerGiB.max["sealing_kWh_GiB_base_/_24"], v102PerGiB.max.storage_kW_GiB, v102PerGiB.max.pue, start, end, filter, miner);
         } else {
-            result = await this.NetworkQuery('0.00250540', '0.0000086973', 1.93, start, end, filter);
+            result = await this.NetworkQuery(v102PerGiB.max["sealing_kWh_GiB_base_/_24"], v102PerGiB.max.storage_kW_GiB, v102PerGiB.max.pue, start, end, filter);
         }
 
         return result;
@@ -216,17 +217,17 @@ class TotalEnergyModel {
         try {
                 let result;
 
-                let sealing_kW_per_GiB_block_min = '.77419505';
-                let sealing_kW_per_GiB_block_est = '4.40199788';
-                let sealing_kW_per_GiB_block_max = '7.21554506';
+                let sealing_kW_per_GiB_block_min = v102PerGiB.min["sealing_kWh_GiB_base_*_120"];
+                let sealing_kW_per_GiB_block_est = v102PerGiB.estimate["sealing_kWh_GiB_base_*_120"];
+                let sealing_kW_per_GiB_block_max = v102PerGiB.max["sealing_kWh_GiB_base_*_120"];
 
-                let storage_kW_per_GiB_min = '0.0000009688';
-                let storage_kW_per_GiB_est = '0.0000032212';
-                let storage_kW_per_GiB_max = '0.0000086973';
+                let storage_kW_per_GiB_min = v102PerGiB.min.storage_kW_GiB;
+                let storage_kW_per_GiB_est = v102PerGiB.estimate.storage_kW_GiB;
+                let storage_kW_per_GiB_max = v102PerGiB.max.storage_kW_GiB;
 
-                let pue_min = 1.18;
-                let pue_est = 1.57;
-                let pue_max = 1.93;
+                let pue_min = v102PerGiB.min.pue;
+                let pue_est = v102PerGiB.estimate.pue;
+                let pue_max = v102PerGiB.max.pue;
 
                 if (miner) {
                     fields = ['epoch','miner','total_energy_kW_lower','total_energy_kW_estimate','total_energy_kW_upper','timestamp'];

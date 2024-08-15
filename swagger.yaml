@@ -44,10 +44,10 @@ paths:
         required: true
         type: string
         enum:
-          - "TotalEnergyModelv_1_0_1"
-          - "SealingEnergyModelv_1_0_1"
-          - "StorageEnergyModelv_1_0_1"
-          - "CumulativeEnergyModel_v_1_0_1"
+          - "TotalEnergyModelv_1_0_2"
+          - "SealingEnergyModelv_1_0_2"
+          - "StorageEnergyModelv_1_0_2"
+          - "CumulativeEnergyModel_v_1_0_2"
           - "RenewableEnergyModel"
           - "EnergyIntensityModel"
           - "SealedModel"
@@ -121,10 +121,10 @@ paths:
         required: true
         type: string
         enum:
-          - "TotalEnergyModelv_1_0_1"
-          - "SealingEnergyModelv_1_0_1"
-          - "StorageEnergyModelv_1_0_1"
-          - "CumulativeEnergyModel_v_1_0_1"
+          - "TotalEnergyModelv_1_0_2"
+          - "SealingEnergyModelv_1_0_2"
+          - "StorageEnergyModelv_1_0_2"
+          - "CumulativeEnergyModel_v_1_0_2"
           - "RenewableEnergyModel"
           - "EnergyIntensityModel"
           - "SealedModel"
@@ -179,10 +179,10 @@ paths:
         required: true
         type: string
         enum:
-          - "TotalEnergyModelv_1_0_1"
-          - "SealingEnergyModelv_1_0_1"
-          - "StorageEnergyModelv_1_0_1"
-          - "CumulativeEnergyModel_v_1_0_1"
+          - "TotalEnergyModelv_1_0_2"
+          - "SealingEnergyModelv_1_0_2"
+          - "StorageEnergyModelv_1_0_2"
+          - "CumulativeEnergyModel_v_1_0_2"
           - "RenewableEnergyModel"
           - "EnergyIntensityModel"
           - "SealedModel"

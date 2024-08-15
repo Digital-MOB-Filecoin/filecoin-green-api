@@ -3,17 +3,18 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 // Model parameters, in kWh/GiB
-let sealing_kWh_per_GiB_block_min = '0.0064516254';
-let sealing_kWh_per_GiB_block_est = '0.0366833157';
-let sealing_kWh_per_GiB_block_max = '0.0601295421';
+let sealing_kWh_per_GiB_block_min = v102PerGiB.min.sealing_kWh_GiB_base;
+let sealing_kWh_per_GiB_block_est = v102PerGiB.estimate.sealing_kWh_GiB_base;
+let sealing_kWh_per_GiB_block_max = v102PerGiB.max.sealing_kWh_GiB_base;
 
 class TotalSealingEnergyModel {
     constructor(pool) {
         this.code_name = 'TotalSealingEnergyModel';
         this.pool = pool;
-        this.name = 'Cumulative amount of energy used to seal files in kWh (v1.0.1)';
+        this.name = 'Cumulative amount of energy used to seal files in kWh (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kWh;
@@ -33,7 +34,7 @@ class TotalSealingEnergyModel {
     }
 
     Details() {
-        return `Cumulative amount of energy used to seal files in kWh (v1.0.1)`;
+        return `Cumulative amount of energy used to seal files in kWh (v1.0.2)`;
     }
 
     async NetworkQuery(formula, start, end, filter) {
@@ -115,7 +116,7 @@ class TotalSealingEnergyModel {
         // variable 1 - Minimum total sealing energy
         let variableTotalSealingEnergy_min = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_min, miner);
         let variableTotalSealingEnergy_min_data = {
-            title: 'Sealing Energy Lower Bound (v1.0.1)',
+            title: 'Sealing Energy Lower Bound (v1.0.2)',
             color: COLOR.green,
             data: variableTotalSealingEnergy_min,
         }
@@ -124,7 +125,7 @@ class TotalSealingEnergyModel {
         // variable 2 - Estimated total sealing energy
         let variableTotalSealingEnergy_est = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_est, miner);
         let variableTotalSealingEnergy_est_data = {
-            title: 'Sealing Energy Estimate (v1.0.1)',
+            title: 'Sealing Energy Estimate (v1.0.2)',
             color: COLOR.silver,
             data: variableTotalSealingEnergy_est,
         }
@@ -133,7 +134,7 @@ class TotalSealingEnergyModel {
         // variable 3 - Max total sealing energy
         let variableTotalSealingEnergy_max = await this.VariableTotalSealed(start, end, filter, sealing_kWh_per_GiB_block_max, miner);
         let variableTotalSealingEnergy_max_data = {
-            title: 'Sealing Energy Upper Bound (v1.0.1)',
+            title: 'Sealing Energy Upper Bound (v1.0.2)',
             color: COLOR.orange,
             data: variableTotalSealingEnergy_max,
         }

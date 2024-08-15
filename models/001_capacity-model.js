@@ -51,7 +51,7 @@ class CapacityModel {
                     SELECT
                         SUM(total) AS cumulative_capacity,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_miners_data_view_country_v9
                     WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY date
              ) q GROUP BY start_date ORDER BY start_date  ${padding};
@@ -80,7 +80,7 @@ class CapacityModel {
                     SELECT
                         SUM(total) AS cumulative_capacity,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_miners_data_view_country_v9
                     WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY  date
              ) q GROUP BY start_date ORDER BY start_date  ${padding};
@@ -111,7 +111,7 @@ class CapacityModel {
                     country,
                         SUM(total) AS cumulative_capacity,
                         date
-                    FROM fil_miners_data_view_country_v8
+                    FROM fil_miners_data_view_country_v9
                     WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                     GROUP BY  country, date
              ) q GROUP BY country, start_date ORDER BY start_date  ${padding};

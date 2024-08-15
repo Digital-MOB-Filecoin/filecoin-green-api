@@ -3,21 +3,22 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
 const EiB_to_GiB = 1073741824;
 const MW_per_EiB_coeff = EiB_to_GiB / 1000;
 
-const sealing_kW_per_GiB_block_min = '0.00026882';
-const sealing_kW_per_GiB_block_est = '0.00152847';
-const sealing_kW_per_GiB_block_max = '0.00250540';
+const sealing_kW_per_GiB_block_min = v102PerGiB.min["sealing_kWh_GiB_base_/_24"];
+const sealing_kW_per_GiB_block_est = v102PerGiB.estimate["sealing_kWh_GiB_base_/_24"];
+const sealing_kW_per_GiB_block_max = v102PerGiB.max["sealing_kWh_GiB_base_/_24"];
 
-const storage_kW_per_GiB_min = '0.0000009688';
-const storage_kW_per_GiB_est = '0.0000032212';
-const storage_kW_per_GiB_max = '0.0000086973';
+const storage_kW_per_GiB_min = v102PerGiB.min.storage_kW_GiB;
+const storage_kW_per_GiB_est = v102PerGiB.estimate.storage_kW_GiB;
+const storage_kW_per_GiB_max = v102PerGiB.max.storage_kW_GiB;
 
-const pue_min = 1.18;
-const pue_est = 1.57;
-const pue_max = 1.93;
+const pue_min = v102PerGiB.min.pue;
+const pue_est = v102PerGiB.estimate.pue;
+const pue_max = v102PerGiB.max.pue;
 
 class EnergyIntensityModel {
     constructor(pool) {
@@ -69,7 +70,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding}),
@@ -116,7 +117,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding}),
@@ -165,7 +166,7 @@ class EnergyIntensityModel {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY country, date) q1
                         GROUP BY country, date ORDER BY date ${padding}),

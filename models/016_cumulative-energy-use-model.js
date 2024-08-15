@@ -3,28 +3,25 @@
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
 const { add_time_interval, get_epoch } = require('./utils')
+const {v102PerGiB} = require("./energy_params/v-1-0-2-perGiB");
 
-const epoch_DOT = 120; // ( 1 hours (3600 sec) / 1 epoch (30 sec))
+const sealing_kW_per_GiB_block_min = v102PerGiB.min.sealing_kWh_GiB_base;
+const sealing_kW_per_GiB_block_est = v102PerGiB.estimate.sealing_kWh_GiB_base;
+const sealing_kW_per_GiB_block_max = v102PerGiB.max.sealing_kWh_GiB_base;
 
-const energy_conts_v1p0p1 = require("./energy_params/v-1-0-1-perGiB.json")
+const storage_kW_per_GiB_min = v102PerGiB.min.storage_kW_GiB;
+const storage_kW_per_GiB_est = v102PerGiB.estimate.storage_kW_GiB;
+const storage_kW_per_GiB_max = v102PerGiB.max.storage_kW_GiB;
 
-const sealing_kW_per_GiB_block_min = '0.0064516254';
-const sealing_kW_per_GiB_block_est = '0.0366833157';
-const sealing_kW_per_GiB_block_max = '0.0601295421';
+const pue_min = v102PerGiB.min.pue;
+const pue_est = v102PerGiB.estimate.pue;
+const pue_max = v102PerGiB.max.pue;
 
-const storage_kW_per_GiB_min = '0.0000009688';
-const storage_kW_per_GiB_est = '0.0000032212';
-const storage_kW_per_GiB_max = '0.0000086973';
-
-const pue_min = 1.18;
-const pue_est = 1.57;
-const pue_max = 1.93;
-
-class CumulativeEnergyModel_v_1_0_1 {
+class CumulativeEnergyModel_v_1_0_2 {
     constructor(pool) {
-        this.code_name = 'CumulativeEnergyModel_v_1_0_1';
+        this.code_name = 'CumulativeEnergyModel_v_1_0_2';
         this.pool = pool;
-        this.name = 'Cumulative Energy Use (v1.0.1)';
+        this.name = 'Cumulative Energy Use (v1.0.2)';
         this.category = CATEGORY.ENERGY; // see type.js
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.kWh;
@@ -67,7 +64,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding})
@@ -108,7 +105,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
                         GROUP BY date ORDER BY date ${padding})
@@ -151,7 +148,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                                 date,
                                 SUM(total_per_day) AS cumulative_total_per_day,
                                 SUM(total) AS  cumulative_capacity
-                            FROM fil_miners_data_view_country_v8
+                            FROM fil_miners_data_view_country_v9
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY country,date) q1
                         GROUP BY country,date ORDER BY date ${padding})
@@ -281,7 +278,7 @@ class CumulativeEnergyModel_v_1_0_1 {
                 data = query_result;
             }
         } catch (e) {
-            ERROR(`[CumulativeEnergyModel_v_1_0_1] Export error:${e}`);
+            ERROR(`[CumulativeEnergyModel_v_1_0_2] Export error:${e}`);
         }
 
         let exportData = {
@@ -313,5 +310,5 @@ class CumulativeEnergyModel_v_1_0_1 {
 }
 
 module.exports = {
-    CumulativeEnergyModel_v_1_0_1
+    CumulativeEnergyModel_v_1_0_2
 };
