@@ -59,21 +59,29 @@ class TotalEnergyModelv_1_0_2 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with storage as (
                     SELECT
-                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS start_date
-                        FROM (
-                            SELECT
-                                date,
-                                SUM(total) AS cumulative_capacity,
-                                SUM(total_per_day) AS cumulative_total_per_day
-                            FROM fil_miners_data_view_country_v9
-                            WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY date) q1
-                        GROUP BY date ORDER BY date ${padding})
-
+                        ROUND(AVG(COALESCE(cumulative_total_per_day, 0))) AS total_per_day,
+                        ROUND(AVG(COALESCE(cumulative_capacity, 0))) AS total,
+                        date_trunc('${params.filter}', COALESCE(d1,d2)::date) AS start_date
+                    FROM (
+                        SELECT
+                            date as "d1",
+                            SUM(total) AS cumulative_capacity
+                        FROM fil_miners_data_view_country_v9
+                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                        GROUP BY date) q1
+                    FULL OUTER JOIN
+                        (
+                        SELECT
+                            date as "d2",
+                            SUM("sealed_GiB") AS cumulative_total_per_day
+                        FROM fil_sealed_capacity_view_v2
+                        WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                        GROUP BY date
+                            ) q2
+                    ON q1.d1 = q2.d2
+                    GROUP BY COALESCE(d1,d2) ORDER BY COALESCE(d1,d2) ${padding})
                     SELECT
                             start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
@@ -100,21 +108,29 @@ class TotalEnergyModelv_1_0_2 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with storage as (
                     SELECT
-                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS start_date
+                        ROUND(AVG(COALESCE(cumulative_total_per_day, 0))) AS total_per_day,
+                        ROUND(AVG(COALESCE(cumulative_capacity, 0))) AS total,
+                        date_trunc('${params.filter}', COALESCE(d1,d2)::date) AS start_date
                         FROM (
                             SELECT
-                                date,
-                                SUM(total) AS cumulative_capacity,
-                                SUM(total_per_day) AS cumulative_total_per_day
+                                date as "d1",
+                                SUM(total) AS cumulative_capacity
                             FROM fil_miners_data_view_country_v9
                             WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
                             GROUP BY date) q1
-                        GROUP BY date ORDER BY date ${padding})
-
+                        FULL OUTER JOIN
+                             (
+                                 SELECT
+                                     date as "d2",
+                                     SUM("sealed_GiB") AS cumulative_total_per_day
+                                 FROM fil_sealed_capacity_view_v2
+                                 WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                                 GROUP BY date
+                             ) q2
+                        ON q1.d1 = q2.d2
+                        GROUP BY COALESCE(d1,d2) ORDER BY COALESCE(d1,d2) ${padding})
                     SELECT
                             start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
@@ -141,31 +157,41 @@ class TotalEnergyModelv_1_0_2 {
 
         try {
                 result = await this.pool.query(`
-                with storage as(
+                with storage as (
                     SELECT
-                        country,
-                        ROUND(AVG(cumulative_total_per_day)) AS total_per_day,
-                        ROUND(AVG(cumulative_capacity)) AS total,
-                        date_trunc('${params.filter}', date::date) AS start_date
+                        ROUND(AVG(COALESCE(cumulative_total_per_day, 0))) AS total_per_day,
+                        ROUND(AVG(COALESCE(cumulative_capacity, 0))) AS total,
+                        date_trunc('${params.filter}', COALESCE(d1,d2)::date) AS start_date
                         FROM (
                             SELECT
-                            country,
-                                date,
-                                SUM(total) AS cumulative_capacity,
-                                SUM(total_per_day) AS cumulative_total_per_day
+                                date as "d1",
+                                SUM(total) AS cumulative_capacity
                             FROM fil_miners_data_view_country_v9
                             WHERE (country='${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
-                            GROUP BY  country, date) q1
-                        GROUP BY  country, date ORDER BY date ${padding})
-
+                            GROUP BY date) q1
+                        FULL OUTER JOIN
+                            (
+                                WITH minerLocationFilter as (
+                                    select DISTINCT(miner)
+                                    from fil_miners_location
+                                    where country = '${params.country}'
+                                )
+                                SELECT
+                                    date as "d2",
+                                    SUM("sealed_GiB") AS cumulative_total_per_day
+                                FROM fil_sealed_capacity_view_v2
+                                WHERE miner in (select * from minerLocationFilter) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                                GROUP BY date
+                            ) q2
+                        ON q1.d1 = q2.d2
+                        GROUP BY COALESCE(d1,d2) ORDER BY COALESCE(d1,d2) ${padding})
                     SELECT
-                            country,
                             start_date,
                             (total * ${storage_kW_per_GiB_min} + total_per_day * ${sealing_kW_per_GiB_block_min}) * ${pue_min} as \"total_energy_kW_lower\" ,
                             (total * ${storage_kW_per_GiB_est} + total_per_day * ${sealing_kW_per_GiB_block_est}) * ${pue_est} as \"total_energy_kW_estimate\" ,
                             (total * ${storage_kW_per_GiB_max} + total_per_day * ${sealing_kW_per_GiB_block_max}) * ${pue_max} as \"total_energy_kW_upper\"
                         FROM storage
-                        GROUP BY country, start_date, total, total_per_day
+                        GROUP BY start_date, total, total_per_day
                         ORDER BY start_date
                 ;`);
         } catch (e) {
