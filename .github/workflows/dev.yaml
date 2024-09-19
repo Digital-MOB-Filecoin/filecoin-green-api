@@ -1,0 +1,28 @@
+name: Build BE
+
+on:
+  push:
+    branches: [dev]
+
+env:
+  SLACK_CHANNEL: infra-ci-filgreen
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: filecoin/filecoin-green-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cristi-mb/build-be@main
+        id: build-be
+        with:
+          aws-access-key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          slack-channel: ${{ env.SLACK_CHANNEL }}
+          slack-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          ecr-repository: ${{ env.ECR_REPOSITORY }}
+
+      - name: Show image tag
+        if: steps.build-be.outcome == 'success'
+        run: echo "${{ steps.build-be.outputs.image-tag }}"

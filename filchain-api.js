@@ -20,6 +20,7 @@ function add_params(have_params) {
 // GET
 const head = async function (req, res, next) {
     try {
+        await pool.query('UPDATE temp_filchain_api_stats SET head_endpoint_call_count = head_endpoint_call_count + 1 WHERE 1 = 1;');
         var result = await pool.query('SELECT MAX(Block) as head FROM fil_blocks ');
 
         if (result.rows.length == 1) {
@@ -39,6 +40,7 @@ const head = async function (req, res, next) {
 // GET
 const block = async function (req, res, next) {
     let block = req.query?.block;
+    await pool.query('UPDATE temp_filchain_api_stats SET block_endpoint_call_count = block_endpoint_call_count + 1 WHERE 1 = 1;');
 
     if (!block) {
         ERROR(`GET[/filchain/block] Failed to get filchain block, no block param provided`);
@@ -58,6 +60,7 @@ const block = async function (req, res, next) {
 
 // GET
 const miners = async function (req, res, next) {
+    await pool.query('UPDATE temp_filchain_api_stats SET miners_endpoint_call_count = miners_endpoint_call_count + 1 WHERE 1 = 1;');
     try {
         var result = await pool.query(`SELECT * FROM fil_miners`);
         res.json(result.rows);
@@ -70,6 +73,7 @@ const miners = async function (req, res, next) {
 
 // GET
 const filchain = async function (req, res, next) {
+    await pool.query('UPDATE temp_filchain_api_stats SET filchain_endpoint_call_count = filchain_endpoint_call_count + 1 WHERE 1 = 1;');
     let query = 'SELECT \"CID\", \"Block\", \"From\", \"To\", \"Nonce\", \"Value\", \"GasLimit\", \"GasFeeCap\", \"GasPremium\", \"Method\", \"Params\", \"ExitCode\", \"Return\", \"GasUsed\", \"Version\", \"Cid\" FROM fil_messages WHERE ';
     let have_params = false;
     let limit = req.query?.limit;
