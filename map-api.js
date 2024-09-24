@@ -92,7 +92,14 @@ const MapListMiner = async function (req, res, next) {
         }
 
         query += `),
-            power_data as (SELECT miner, power FROM fil_miners_view_v3)
+            power_data as (
+            SELECT
+                miner,
+                SUM(total) AS power
+            FROM fil_miners_data_view_country_v9
+            WHERE (miner in (${miners.map(miner => `'${miner}'`).join(',')})) AND date::timestamp = date_trunc('day', now() - interval '3 day')
+            GROUP BY miner
+            )
             SELECT
                 miners_data.miner, country, city, lat, long, power
             FROM miners_data
