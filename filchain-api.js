@@ -60,7 +60,6 @@ const block = async function (req, res, next) {
 
 // GET
 const miners = async function (req, res, next) {
-    await pool.query('UPDATE temp_filchain_api_stats SET miners_endpoint_call_count = miners_endpoint_call_count + 1 WHERE 1 = 1;');
     try {
         var result = await pool.query(`SELECT * FROM fil_miners`);
         res.json(result.rows);
@@ -73,7 +72,6 @@ const miners = async function (req, res, next) {
 
 // GET
 const filchain = async function (req, res, next) {
-    await pool.query('UPDATE temp_filchain_api_stats SET filchain_endpoint_call_count = filchain_endpoint_call_count + 1 WHERE 1 = 1;');
     let query = 'SELECT \"CID\", \"Block\", \"From\", \"To\", \"Nonce\", \"Value\", \"GasLimit\", \"GasFeeCap\", \"GasPremium\", \"Method\", \"Params\", \"ExitCode\", \"Return\", \"GasUsed\", \"Version\", \"Cid\" FROM fil_messages WHERE ';
     let have_params = false;
     let limit = req.query?.limit;
