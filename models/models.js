@@ -69,7 +69,7 @@ class Models {
             // this.Register(totalEmissionsWithRenewableModel);      //Total emissions with renewable
         }
 
-        this.Register(energyIntensityModel);          //Energy Intensity
+        // this.Register(energyIntensityModel);          //Energy Intensity
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity
         
