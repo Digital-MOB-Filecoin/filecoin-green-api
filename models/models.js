@@ -1,7 +1,7 @@
 const config = require('./../config');
 const { Pool } = require("pg");
 const { INFO, ERROR, WARNING } = require('./../logs');
-const { ValidModel, Start, End, Filter, Offset, Limit, Miners, Country } = require('./utils');
+const { ValidModel, Start, End, Filter, Offset, Limit, Miners, Country, MinersArray} = require('./utils');
 const pool = new Pool(config.database);
 
 const { CapacityModel } = require('./001_capacity-model');
@@ -25,6 +25,7 @@ const { EnergyIntensityModel } = require('./018_energy-intensity-model.js');
 const { TotalEmissionsModel } = require('./019_total-emissions-model.js');
 const { TotalEmissionsWithRenewableModel } = require('./020_total-emissions-with-renewable-model.js');
 const { TotalEmissionsWithRenewableFloorModel } = require('./021_total-emissions-with-renewable-floor-model.js');
+const { MinersEmissionScoresModel } = require('./022_miners-emission-scores-model');
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -47,6 +48,7 @@ let energyIntensityModel = new EnergyIntensityModel(pool);
 let totalEmissionsModel = new TotalEmissionsModel(pool);
 let totalEmissionsWithRenewableModel = new TotalEmissionsWithRenewableModel(pool);
 let totalEmissionsWithRenewableFloorModel = new TotalEmissionsWithRenewableFloorModel(pool);
+let minersEmissionScoresModel = new MinersEmissionScoresModel(pool);
 
 
 class Models {
@@ -72,7 +74,8 @@ class Models {
         // this.Register(energyIntensityModel);          //Energy Intensity
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity
-        
+        this.Register(minersEmissionScoresModel);                 //Data storage capacity
+
         // this.Register(fractionModel);
         // this.Register(sealingEnergyModel);
         // this.Register(storageEnergyModel);
@@ -109,6 +112,7 @@ class Models {
             filter: Filter(query),
             country: Country(query),
             miners: Miners(query),
+            minersArray: MinersArray(query),
         }
 
         if (id) {
@@ -152,6 +156,7 @@ class Models {
             limit: Limit(query),
             filter: Filter(query),
             country: Country(query),
+            minersArray: MinersArray(query),
         }
 
         if (id) {

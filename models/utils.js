@@ -207,6 +207,16 @@ function Country(query) {
     return country;
 }
 
+function MinersArray(query) {
+    let miners = [];
+
+    if (query?.miners?.length > 0) {
+        miners = query.miners.split(',');
+    }
+
+    return miners;
+}
+
 module.exports = {
     ValidModel,
     Start,
@@ -215,6 +225,7 @@ module.exports = {
     Offset,
     Limit,
     Miners,
+    MinersArray,
     Country,
     add_time_interval,
     get_epoch
