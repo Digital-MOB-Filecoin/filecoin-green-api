@@ -74,7 +74,7 @@ class Models {
         // this.Register(energyIntensityModel);          //Energy Intensity
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity
-        this.Register(minersEmissionScoresModel);                 //Data storage capacity
+        this.Register(minersEmissionScoresModel);                 //Miners Emission Scores
 
         // this.Register(fractionModel);
         // this.Register(sealingEnergyModel);

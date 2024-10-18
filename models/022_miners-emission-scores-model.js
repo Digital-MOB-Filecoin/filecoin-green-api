@@ -46,7 +46,7 @@ class MinersEmissionScoresModel {
 
         try {
             result = await this.pool.query(`
-            SELECT date AS start_date, emission_score as value from fil_miners_emissions_scores
+            SELECT date AS start_date, emission_score as value from fil_miners_emission_scores
             WHERE miner = '${minerId}' AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
             ORDER BY date ${padding};
          `);
