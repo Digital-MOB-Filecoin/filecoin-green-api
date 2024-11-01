@@ -30,7 +30,7 @@ class MinersEmissionScoresModel {
     }
 
     Details() {
-        return `**Miner Emission Score:** This represents the relative emissions intensity compared to the network average (0.5). 
+        return `**Emission Score:** This represents the relative emissions intensity compared to the network average (0.5). 
         A score higher than 0.5 indicates lower emissions intensity than the network average, while a score lower than 0.5 indicates higher emissions intensity. 
         The score ranges from a minimum of 0 to a maximum of 1.
              `;
@@ -88,7 +88,7 @@ class MinersEmissionScoresModel {
 
         let variableMinerEmissionScore = await this.VariableMinerEmissionScore(params);
         let variableTotalSealed_Data = {
-            title: 'Miner Emission Score',
+            title: 'Emission Score',
             color: COLOR.green,
             data: variableMinerEmissionScore,
         }

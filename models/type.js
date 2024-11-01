@@ -1,7 +1,7 @@
 var CATEGORY  = {
     CAPACITY  : 'capacity',
     ENERGY     : 'energy',
-    EMISSIONS : 'emissions'
+    EMISSIONS : 'How clean is this node relative to the rest of the network?'
     // DEPRECATED : 'deprecated'
 };
 
