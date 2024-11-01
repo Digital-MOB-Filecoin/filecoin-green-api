@@ -10,8 +10,8 @@ class MinersEmissionScoresModel {
     constructor(pool) {
         this.code_name = 'MinersEmissionScoresModel';
         this.pool = pool;
-        this.name = 'Miner Emission Score';
-        this.category = CATEGORY.EMISSIONS;
+        this.name = 'Emission Score';
+        this.category = CATEGORY.MINER_EMISSIONS;
         this.x = DATA_TYPE.TIME;
         this.y = DATA_TYPE.score0To1;
         this.version = VERSION.v0;
