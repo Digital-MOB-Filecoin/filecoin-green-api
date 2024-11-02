@@ -2,7 +2,8 @@ var CATEGORY  = {
     CAPACITY  : 'capacity',
     ENERGY     : 'energy',
     EMISSIONS  : 'emissions',
-    MINER_EMISSIONS : 'How clean is this node relative to the rest of the network?'
+    MINER_EMISSIONS : 'How clean is this node relative to the rest of the network?',
+    MINER_CONFIDENCE : 'confidence',
     // DEPRECATED : 'deprecated'
 };
 

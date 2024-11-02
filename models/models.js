@@ -26,6 +26,7 @@ const { TotalEmissionsModel } = require('./019_total-emissions-model.js');
 const { TotalEmissionsWithRenewableModel } = require('./020_total-emissions-with-renewable-model.js');
 const { TotalEmissionsWithRenewableFloorModel } = require('./021_total-emissions-with-renewable-floor-model.js');
 const { MinersEmissionScoresModel } = require('./022_miners-emission-scores-model');
+const {MinersConfidenceScoresModel} = require("./023_miners-confidence-scores-model");
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -49,6 +50,7 @@ let totalEmissionsModel = new TotalEmissionsModel(pool);
 let totalEmissionsWithRenewableModel = new TotalEmissionsWithRenewableModel(pool);
 let totalEmissionsWithRenewableFloorModel = new TotalEmissionsWithRenewableFloorModel(pool);
 let minersEmissionScoresModel = new MinersEmissionScoresModel(pool);
+let minersConfidenceScoresModel = new MinersConfidenceScoresModel(pool);
 
 
 class Models {
@@ -75,6 +77,7 @@ class Models {
         this.Register(sealedModel);                   //Data storage capacity added per day
         this.Register(capacityModel);                 //Data storage capacity
         this.Register(minersEmissionScoresModel);                 //Miners Emission Scores
+        this.Register(minersConfidenceScoresModel);                 //Miners Confidence Scores
 
         // this.Register(fractionModel);
         // this.Register(sealingEnergyModel);
