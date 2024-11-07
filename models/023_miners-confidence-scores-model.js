@@ -43,7 +43,7 @@ class MinersConfidenceScoresModel {
 
         try {
             result = await this.pool.query(`
-            SELECT date AS start_date, emission_score as value from fil_miners_emission_scores
+            SELECT date AS start_date, confidence_score as value from fil_miners_confidence_scores
             WHERE miner = '${minerId}' AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
             ORDER BY date ${padding};
          `);
@@ -106,7 +106,7 @@ class MinersConfidenceScoresModel {
                 const miners = params.minersArray;
 
                 if (miners && miners.length === 1) {
-                    fields = ['emission_score','start_date', 'end_date'];
+                    fields = ['confidence_score','start_date', 'end_date'];
                     result = await this.MinerQuery(miners[0], params);
                 }
 
