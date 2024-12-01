@@ -112,6 +112,29 @@ function add_time_interval(start, end, filter, rows) {
     return result;
 }
 
+function add_missing_dates(start, end, rows, defaultValue = 0) {
+    let result = [];
+    let date = new Date(start);
+
+    while (date <= new Date(end)) {
+        let item = rows.find(item => item.start_date.getTime() === date.getTime());
+
+        if (item) {
+            result.push(item);
+        } else {
+            result.push({
+                start_date: new Date(date),
+                value: defaultValue
+            });
+        }
+
+        date.setDate(date.getDate() + 1);
+    }
+
+    return result;
+
+}
+
 function ValidModel(obj) {
     return implementsMethods(obj, 
         'Name', 
@@ -228,5 +251,6 @@ module.exports = {
     MinersArray,
     Country,
     add_time_interval,
+    add_missing_dates,
     get_epoch
 }

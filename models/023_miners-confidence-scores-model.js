@@ -2,7 +2,7 @@
 
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
-const { add_time_interval } = require('./utils')
+const { add_time_interval, add_missing_dates } = require('./utils')
 
 
 
@@ -51,7 +51,8 @@ class MinersConfidenceScoresModel {
             ERROR(`[MinersConfidenceScoresModel] MinerQuery error:${e}`);
         }
 
-        return add_time_interval(params.start, params.end, params.filter, result.rows);
+        const rows = add_missing_dates(params.start, params.end, result?.rows || []);
+        return add_time_interval(params.start, params.end, params.filter, rows);
     }
 
 
