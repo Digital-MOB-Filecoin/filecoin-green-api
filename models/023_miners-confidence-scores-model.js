@@ -30,7 +30,8 @@ class MinersConfidenceScoresModel {
     }
 
     Details() {
-        return `**Confidence Score**`;
+        return `*   How confident are we in the data?
+*   The confidence score quantifies how many steps a node operator has taken to prove data inputs beyond publicly available data from the network. For example, a node may work with auditors to prove the location of their data center or prove that they have solar on the roof. Visit [novaenergy.ai](https://novaenergy.ai/) for more information.`;
     }
 
     async MinerQuery(minerId, params) {
