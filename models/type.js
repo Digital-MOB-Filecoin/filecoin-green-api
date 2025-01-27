@@ -4,6 +4,7 @@ var CATEGORY  = {
     EMISSIONS  : 'emissions',
     MINER_EMISSIONS : 'How clean is this node relative to the rest of the network?',
     MINER_CONFIDENCE : 'confidence',
+    MINER_LOCATION : 'location',
     // DEPRECATED : 'deprecated'
 };
 
