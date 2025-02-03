@@ -44,9 +44,9 @@ class EnergyPerTransactionModel {
         try {
             result = await this.pool.query(`
                 SELECT DATE_TRUNC('${params.filter}', date) AS start_date,
-                       SUM(SUM("energy_kw_lower_per_messages")) OVER (ORDER by date_trunc('${params.filter}', date)) / COUNT(*) as "daily_energy_lower_per_transaction",
-                        SUM(SUM("energy_kw_estimate_per_messages")) OVER (ORDER by date_trunc('${params.filter}', date)) / COUNT(*) as "daily_energy_estimate_per_transaction",
-                        SUM(SUM("energy_kw_upper_per_messages")) OVER (ORDER by date_trunc('${params.filter}', date)) / COUNT(*) as "daily_energy_upper_per_transaction"
+                       SUM("energy_kw_lower_per_messages") / COUNT(*) as "daily_energy_lower_per_transaction",
+                       SUM("energy_kw_estimate_per_messages") / COUNT(*) as "daily_energy_estimate_per_transaction",
+                       SUM("energy_kw_upper_per_messages") / COUNT(*) as "daily_energy_upper_per_transaction"
                 FROM fil_messages_stats
                 WHERE
                     (date::date >= '${params.start}'::date)
