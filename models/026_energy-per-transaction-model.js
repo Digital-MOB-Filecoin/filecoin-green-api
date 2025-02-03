@@ -57,6 +57,8 @@ class EnergyPerTransactionModel {
         } catch (e) {
             ERROR(`[EnergyPerTransactionModel] NetworkQuery error:${e}`);
         }
+        console.log(result);
+        console.log(result.rows)
 
 
         const rows = add_missing_dates(params.start, params.end, result?.rows || []);
@@ -102,7 +104,7 @@ class EnergyPerTransactionModel {
 
         try {
             data = await this.NetworkQuery(params);
-            console.log(data);
+            // todo: make sure data contains lower,estimate,upper
         } catch (e) {
             ERROR(`[EnergyPerTransactionModel] Export error:${e}`);
         }
