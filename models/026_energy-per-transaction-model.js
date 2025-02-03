@@ -2,7 +2,7 @@
 
 const { INFO, ERROR } = require('../logs');
 const { CATEGORY, DATA_TYPE, VERSION, COLOR } = require('./type')
-const { add_time_interval, add_missing_dates} = require('./utils')
+const { add_time_interval } = require('./utils')
 
 
 
@@ -57,12 +57,41 @@ class EnergyPerTransactionModel {
         } catch (e) {
             ERROR(`[EnergyPerTransactionModel] NetworkQuery error:${e}`);
         }
-        console.log(result);
-        console.log(result.rows)
 
+        return add_time_interval(params.start, params.end, params.filter, result?.rows || []);
+    }
 
-        const rows = add_missing_dates(params.start, params.end, result?.rows || []);
-        return add_time_interval(params.start, params.end, params.filter, rows);
+    async VariableEnergyPerTransaction(params) {
+        const query_result = await this.NetworkQuery(params);
+
+        let energyPerTxData_min = [];
+        let energyPerTxData_est = [];
+        let energyPerTxData_max = [];
+
+        for (const item of query_result ) {
+            energyPerTxData_min.push({
+                value: item.daily_energy_lower_per_transaction,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            energyPerTxData_est.push({
+                value: item.daily_energy_estimate_per_transaction,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+            energyPerTxData_max.push({
+                value: item.daily_energy_upper_per_transaction,
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+
+        }
+
+        return {
+            energyPerTxData_min,
+            energyPerTxData_est,
+            energyPerTxData_max,
+        };
     }
 
     async Query(id, params) {
@@ -81,17 +110,32 @@ class EnergyPerTransactionModel {
             data : [] // [ {title: 'variable 1', data: []} , {title: 'variable 2', data: []} ]
         }
 
-        result.data.push(await this.NetworkQuery(params));
+        // variable 1 - energy per tx lower bound
+        const { energyPerTxData_min, energyPerTxData_est, energyPerTxData_max} = await this.VariableEnergyPerTransaction(params);
+        let energyPerTxVariable_min = {
+            title: 'Lower bound',
+            color: COLOR.green,
+            data: energyPerTxData_min,
+        }
+        result.data.push(energyPerTxVariable_min);
 
+        // variable 2 - energy per tx estimate
+        let energyPerTxVariable_est = {
+            title: 'Estimate',
+            color: COLOR.silver,
+            data: energyPerTxData_est,
+        }
 
-        // push 3 sets, lower, estimate, upper
-        // let variableTotalSealed_Data = {
-        //     title: 'Green Score',
-        //     color: COLOR.green,
-        //     data: variableEnergyPerTransaction,
-        // }
-        //
-        // result.data.push(variableTotalSealed_Data);
+        result.data.push(energyPerTxVariable_est);
+
+        // variable 3 - energy per tx upper bound
+        let energyPerTxVariable_max = {
+            title: 'Upper bound',
+            color: COLOR.orange,
+            data: energyPerTxData_max,
+        }
+
+        result.data.push(energyPerTxVariable_max);
 
         return result;
     }
@@ -104,7 +148,6 @@ class EnergyPerTransactionModel {
 
         try {
             data = await this.NetworkQuery(params);
-            // todo: make sure data contains lower,estimate,upper
         } catch (e) {
             ERROR(`[EnergyPerTransactionModel] Export error:${e}`);
         }
