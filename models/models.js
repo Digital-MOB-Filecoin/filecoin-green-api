@@ -30,6 +30,7 @@ const {MinersConfidenceScoresModel} = require("./023_miners-confidence-scores-mo
 const {MinersLocationScoresModel} = require("./024_miners-location-scores-model");
 const {MinersGreenScoresModel} = require("./025_miners-green-scores-model");
 const {EnergyPerTransactionModel} = require("./026_energy-per-transaction-model");
+const {EmissionsPerTransactionModel} = require("./027_emissions-per-transaction-model");
 
 let capacityModel = new CapacityModel(pool);
 // let fractionModel = new FractionModel(pool);
@@ -57,6 +58,7 @@ let minersConfidenceScoresModel = new MinersConfidenceScoresModel(pool);
 let minersLocationScoresModel = new MinersLocationScoresModel(pool);
 let minersGreenScoresModel = new MinersGreenScoresModel(pool);
 let energyPerTransactionModel = new EnergyPerTransactionModel(pool);
+let emissionsPerTransactionModel = new EmissionsPerTransactionModel(pool);
 
 
 class Models {
@@ -87,6 +89,7 @@ class Models {
         this.Register(minersLocationScoresModel);                 //Miners Location Scores
         this.Register(minersGreenScoresModel);                 //Miners Green Scores
         this.Register(energyPerTransactionModel);                 //Energy per transaction
+        this.Register(emissionsPerTransactionModel);                 //Emissions per transaction
 
         // this.Register(fractionModel);
         // this.Register(sealingEnergyModel);
