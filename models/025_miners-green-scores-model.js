@@ -43,7 +43,7 @@ class MinersGreenScoresModel {
 
         try {
             result = await this.pool.query(`
-            SELECT date AS start_date, green_score as value from fil_miners_green_scores
+            SELECT date AS start_date, green_score as value from fil_miners_green_scores_v2
             WHERE miner = '${minerId}' AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
             ORDER BY date ${padding};
          `);
