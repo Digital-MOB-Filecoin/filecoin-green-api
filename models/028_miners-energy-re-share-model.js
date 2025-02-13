@@ -42,7 +42,7 @@ class MinersEnergyReShareModel {
     try {
       result = await this.pool.query(`
                   SELECT
-                      day as start_date,
+                      DATE_TRUNC('${params.filter}', day::date) AS start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) as value
                   FROM fil_miners_energy_re_share
                   WHERE (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
@@ -71,7 +71,7 @@ class MinersEnergyReShareModel {
     try {
       result = await this.pool.query(`
                   SELECT
-                      day as start_date,
+                      DATE_TRUNC('${params.filter}', day::date) AS start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) as value
                   FROM fil_miners_energy_re_share
                   WHERE (miner in ${params.miners}) AND (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
@@ -100,7 +100,7 @@ class MinersEnergyReShareModel {
     try {
       result = await this.pool.query(`
                   SELECT
-                      day as start_date,
+                      DATE_TRUNC('${params.filter}', day::date) AS start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) as value
                   FROM fil_miners_energy_re_share
                   WHERE (country = '${params.country}') AND (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
@@ -173,7 +173,7 @@ class MinersEnergyReShareModel {
         fields = ["value", "start_date", "end_date"];
         query_result = await this.MinerQuery(params);
       } else if (params.country) {
-        fields = ["country", "value", "start_date", "end_date"];
+        fields = ["value", "start_date", "end_date"];
         query_result = await this.CountryQuery(params);
       } else {
         fields = ["value", "start_date", "end_date"];
