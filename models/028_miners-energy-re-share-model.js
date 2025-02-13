@@ -45,7 +45,7 @@ class MinersEnergyReShareModel {
                       day as start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) * 100 as value
                   FROM fil_miners_energy_re_share
-                  WHERE (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                  WHERE (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
                   GROUP BY start_date ORDER BY start_date ${padding};
                 ;`);
     } catch (e) {
@@ -74,7 +74,7 @@ class MinersEnergyReShareModel {
                       day as start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) * 100 as value
                   FROM fil_miners_energy_re_share
-                  WHERE (miner in ${params.miners}) AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                  WHERE (miner in ${params.miners}) AND (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
                   GROUP BY start_date, miner ORDER BY start_date ${padding};
                 ;`);
     } catch (e) {
@@ -103,7 +103,7 @@ class MinersEnergyReShareModel {
                       day as start_date,
                       SUM("total_energy_kW_estimate_re_share") / NULLIF(SUM("total_energy_kW_estimate"), 0) * 100 as value
                   FROM fil_miners_energy_re_share
-                  WHERE (country = '${params.country}') AND (date::date >= '${params.start}'::date) AND (date::date <= '${params.end}'::date)
+                  WHERE (country = '${params.country}') AND (day::date >= '${params.start}'::date) AND (day::date <= '${params.end}'::date)
                   GROUP BY start_date, miner ORDER BY start_date ${padding};
                 ;`);
     } catch (e) {
