@@ -33,7 +33,7 @@ class SealingEnergyModelv_1_0_2 {
     }
 
     Details() {
-        return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the process of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
+        return `[Sealing](https://spec.filecoin.io/systems/filecoin_mining/sector/sealing/) is the of generating SNARK proofs for a data sector which will allow an SP to prove that they are continuing to store that data over time, and is one of the components of energy use of the Filecoin network. Energy use due to sealing is estimated by multiplying the increase in storage capacity over a given time period by a constant value as described in the methodology. Bounds and estimate come from different values of this constant.
 
 **Network view:** Total electrical power used to seal data for the entire Filecoin network.
 
