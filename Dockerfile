@@ -1,9 +1,11 @@
 FROM node:14-stretch AS development
 
 WORKDIR /usr/src/app
-COPY package*.json ./
 
+COPY package*.json ./
 RUN npm install
+RUN npm install -g nodemon
+
 COPY . .
 
 FROM node:14-stretch AS production

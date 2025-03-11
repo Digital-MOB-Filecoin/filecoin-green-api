@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  filgreen-api:
+    build:
+      context: .
+      target: development
+    container_name: filgreen-api-container
+    volumes:
+      - .:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env
+    command: nodemon api.js
+    networks:
+      - filscraper_webnet
+volumes:
+  node_modules:
+networks:
+  filscraper_webnet:
+    external: true
