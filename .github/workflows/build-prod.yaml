@@ -8,6 +8,7 @@ env:
   SLACK_CHANNEL: infra-ci-filgreen
   AWS_REGION: us-east-1
   ECR_REPOSITORY: filecoin/filecoin-green-api
+  NODE_VERSION: 23.x
 
 jobs:
   build:
@@ -22,6 +23,7 @@ jobs:
           slack-channel: ${{ env.SLACK_CHANNEL }}
           slack-token: ${{ secrets.SLACK_BOT_TOKEN }}
           docker-path: ${{ env.DOCKER_PATH }}
+          node-version: ${{ env.NODE_VERSION }}
           ecr-repository: ${{ env.ECR_REPOSITORY }}
           custom-image-tag: ${{ github.ref_name }}
 
